@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Donate Timer</title>
+    <link rel="stylesheet" href="/data/styles.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="App dt-app">
+      <header class="dt-hero dt-card">
+        <div class="dt-hero-main">
+          <div id="timer" class="dt-timer">--:--:--</div>
+          <div class="dt-hero-meta">
+            <span id="timer-status" class="dt-badge"></span>
+            <span id="rate-now" class="dt-muted"></span>
+            <span id="currency-now" class="dt-muted"></span>
+          </div>
+          <div id="blink-info" class="dt-blink" hidden></div>
+        </div>
+        <div class="dt-hero-actions">
+          <button id="btn-start" class="primary-action" type="button" data-i18n="start"></button>
+          <button id="btn-pause" class="secondary-action" type="button" data-i18n="pause"></button>
+          <button id="btn-reset" class="secondary-action dt-danger" type="button" data-i18n="reset"></button>
+        </div>
+      </header>
+
+      <div id="toast" class="dt-toast" hidden></div>
+
+      <main class="dt-grid">
+        <!-- Column 1 -->
+        <div class="dt-col">
+          <section class="dt-card">
+            <h2 data-i18n="secTimer"></h2>
+            <div class="dt-field">
+              <span data-i18n="setRemaining"></span>
+              <div class="dt-row">
+                <div class="dt-hms" id="remaining-hms">
+                  <input type="number" min="0" data-part="h" /><span data-i18n="hh"></span>
+                  <input type="number" min="0" max="59" data-part="m" /><span data-i18n="mm"></span>
+                  <input type="number" min="0" max="59" data-part="s" /><span data-i18n="ss"></span>
+                </div>
+                <button id="btn-set-remaining" class="secondary-action" type="button" data-i18n="apply"></button>
+              </div>
+            </div>
+            <form data-section="timer" class="dt-form">
+              <div class="dt-field">
+                <span data-i18n="initialTime"></span>
+                <div class="dt-hms" data-hms="initialSeconds">
+                  <input type="number" min="0" data-part="h" /><span data-i18n="hh"></span>
+                  <input type="number" min="0" max="59" data-part="m" /><span data-i18n="mm"></span>
+                  <input type="number" min="0" max="59" data-part="s" /><span data-i18n="ss"></span>
+                </div>
+              </div>
+              <label class="dt-field">
+                <span data-i18n="blinkSeconds"></span>
+                <input name="blinkSeconds" data-kind="number" type="number" min="0" max="600" />
+              </label>
+              <p class="dt-hint" data-i18n="blinkHint"></p>
+              <button class="primary-action" type="submit" data-i18n="save"></button>
+            </form>
+          </section>
+
+          <section class="dt-card">
+            <h2 data-i18n="secManual"></h2>
+            <div class="dt-quick" id="quick-buttons"></div>
+            <div class="dt-field">
+              <div class="dt-row">
+                <div class="dt-hms" id="custom-hms">
+                  <input type="number" min="0" data-part="h" /><span data-i18n="hh"></span>
+                  <input type="number" min="0" max="59" data-part="m" /><span data-i18n="mm"></span>
+                  <input type="number" min="0" max="59" data-part="s" /><span data-i18n="ss"></span>
+                </div>
+              </div>
+              <div class="dt-row">
+                <button id="btn-add-custom" class="secondary-action" type="button" data-i18n="addCustom"></button>
+                <button id="btn-sub-custom" class="secondary-action" type="button" data-i18n="subCustom"></button>
+              </div>
+            </div>
+            <div class="dt-field">
+              <span data-i18n="addWithName"></span>
+              <div class="dt-row">
+                <div class="dt-hms" id="named-hms">
+                  <input type="number" min="0" data-part="h" /><span data-i18n="hh"></span>
+                  <input type="number" min="0" max="59" data-part="m" /><span data-i18n="mm"></span>
+                  <input type="number" min="0" max="59" data-part="s" /><span data-i18n="ss"></span>
+                </div>
+              </div>
+              <div class="dt-row">
+                <input id="named-nick" type="text" maxlength="100" data-i18n-placeholder="nickname" />
+                <button id="btn-add-named" class="secondary-action" type="button" data-i18n="addCustom"></button>
+              </div>
+              <p class="dt-hint" data-i18n="addWithNameHint"></p>
+            </div>
+            <div class="dt-field">
+              <span data-i18n="addAmount"></span>
+              <div class="dt-row">
+                <input id="amount-value" type="number" min="0" step="0.01" data-i18n-placeholder="amount" />
+                <input id="amount-nick" type="text" maxlength="100" data-i18n-placeholder="nickname" />
+                <button id="btn-add-amount" class="secondary-action" type="button" data-i18n="addDonation"></button>
+              </div>
+              <p class="dt-hint" data-i18n="addAmountHint"></p>
+            </div>
+          </section>
+
+          <section class="dt-card">
+            <h2 data-i18n="secRate"></h2>
+            <form data-section="rate" class="dt-form">
+              <label class="dt-field">
+                <span data-i18n="rateMode"></span>
+                <select name="rateMode" data-kind="select">
+                  <option value="amount_per_sec" data-i18n="modeAmountPerSec"></option>
+                  <option value="sec_per_amount" data-i18n="modeSecPerAmount"></option>
+                </select>
+              </label>
+              <label class="dt-field">
+                <span data-i18n="rateValue"></span>
+                <input name="rate" data-kind="number" type="number" min="0.0001" step="any" />
+              </label>
+              <label class="dt-field">
+                <span data-i18n="baseCurrency"></span>
+                <select name="currency" data-kind="select" id="currency-select"></select>
+              </label>
+              <p class="dt-hint" data-i18n="currencyHint"></p>
+              <label class="dt-field">
+                <span data-i18n="widgetTitle"></span>
+                <input name="title" data-kind="text" type="text" maxlength="200" />
+              </label>
+              <button class="primary-action" type="submit" data-i18n="save"></button>
+            </form>
+          </section>
+
+          <section class="dt-card">
+            <h2 data-i18n="secColors"></h2>
+            <form data-section="colors" class="dt-form">
+              <label class="dt-check">
+                <input name="colorLevels.enabled" data-kind="bool" type="checkbox" />
+                <span data-i18n="colorsEnabled"></span>
+              </label>
+              <div class="dt-pair">
+                <label class="dt-field dt-swatch dt-swatch--blue"><span data-i18n="colorBlue"></span><input name="colorLevels.blue" data-kind="number" type="number" min="0" step="any" /></label>
+                <label class="dt-field dt-swatch dt-swatch--purple"><span data-i18n="colorPurple"></span><input name="colorLevels.purple" data-kind="number" type="number" min="0" step="any" /></label>
+                <label class="dt-field dt-swatch dt-swatch--green"><span data-i18n="colorGreen"></span><input name="colorLevels.green" data-kind="number" type="number" min="0" step="any" /></label>
+                <label class="dt-field dt-swatch dt-swatch--red"><span data-i18n="colorRed"></span><input name="colorLevels.red" data-kind="number" type="number" min="0" step="any" /></label>
+              </div>
+              <button class="primary-action" type="submit" data-i18n="save"></button>
+            </form>
+          </section>
+        </div>
+
+        <!-- Column 2 -->
+        <div class="dt-col">
+          <section class="dt-card dt-journal">
+            <h2 data-i18n="secJournal"></h2>
+            <p id="journal-summary" class="dt-muted"></p>
+            <p id="widgets-cleared" class="dt-hint" hidden></p>
+            <div class="dt-row">
+              <button id="btn-remove-last" class="secondary-action" type="button" data-i18n="removeLast"></button>
+              <button id="btn-clear-history" class="secondary-action dt-danger" type="button" data-i18n="clearHistory"></button>
+              <button id="btn-clear-widgets" class="secondary-action" type="button" data-i18n="clearWidgets"></button>
+            </div>
+            <ol id="journal" class="dt-journal-list"></ol>
+          </section>
+
+          <section class="dt-card">
+            <h2 data-i18n="secGoal"></h2>
+            <div class="dt-progress"><i id="goal-bar"></i></div>
+            <p id="goal-progress" class="dt-muted"></p>
+            <form data-section="goal" class="dt-form">
+              <label class="dt-check">
+                <input name="goal.enabled" data-kind="bool" type="checkbox" />
+                <span data-i18n="enabled"></span>
+              </label>
+              <label class="dt-field"><span data-i18n="title"></span><input name="goal.title" data-kind="text" type="text" maxlength="200" /></label>
+              <div class="dt-pair">
+                <label class="dt-field"><span data-i18n="goalTarget"></span><input name="goal.target" data-kind="number" type="number" min="0" step="any" /></label>
+                <label class="dt-field"><span data-i18n="goalStart"></span><input name="goal.start" data-kind="number" type="number" min="0" step="any" /></label>
+              </div>
+              <label class="dt-field">
+                <span data-i18n="goalStartAt"></span>
+                <div class="dt-row">
+                  <input name="goal.startAt" data-kind="datetime" type="datetime-local" step="1" />
+                  <button type="button" class="secondary-action" data-set-now="goal.startAt" data-i18n="now"></button>
+                </div>
+              </label>
+              <p class="dt-hint" data-i18n="goalStartAtHint"></p>
+              <div class="dt-pair">
+                <label class="dt-field"><span data-i18n="trackOpacity"></span><input name="goal.trackOpacity" data-kind="number" type="number" min="0" max="100" /></label>
+                <label class="dt-field"><span data-i18n="fillOpacity"></span><input name="goal.fillOpacity" data-kind="number" type="number" min="0" max="100" /></label>
+              </div>
+              <button class="primary-action" type="submit" data-i18n="save"></button>
+            </form>
+          </section>
+
+          <section class="dt-card">
+            <h2 data-i18n="secMarathon"></h2>
+            <div class="dt-stats">
+              <div><span data-i18n="gross"></span><b id="stat-gross">0</b></div>
+              <div><span data-i18n="net"></span><b id="stat-net">0</b></div>
+              <div><span data-i18n="donationsCount"></span><b id="stat-count">0</b></div>
+            </div>
+            <form data-section="marathon" class="dt-form">
+              <label class="dt-field">
+                <span data-i18n="marathonStart"></span>
+                <div class="dt-row">
+                  <input name="marathon.startAt" data-kind="datetime" type="datetime-local" step="1" />
+                  <button type="button" class="secondary-action" data-set-now="marathon.startAt" data-i18n="now"></button>
+                  <button type="button" class="secondary-action" data-clear="marathon.startAt" data-i18n="clear"></button>
+                </div>
+              </label>
+              <p class="dt-hint" data-i18n="marathonStartHint"></p>
+              <div class="dt-pair">
+                <label class="dt-field"><span data-i18n="commission"></span><input name="marathon.commissionPercent" data-kind="number" type="number" min="0" max="100" step="any" /></label>
+                <label class="dt-field">
+                  <span data-i18n="accent"></span>
+                  <select name="marathon.accent" data-kind="select" id="accent-select"></select>
+                </label>
+              </div>
+              <button class="primary-action" type="submit" data-i18n="save"></button>
+            </form>
+          </section>
+        </div>
+
+        <!-- Column 3 -->
+        <div class="dt-col">
+          <section class="dt-card">
+            <h2 data-i18n="secBonus"></h2>
+            <p id="bonus-status" class="dt-bonus-status"></p>
+            <div class="dt-row">
+              <button id="btn-bonus-start" class="primary-action" type="button" data-i18n="bonusStart"></button>
+              <button id="btn-bonus-stop" class="secondary-action" type="button" data-i18n="bonusStop"></button>
+              <button id="btn-bonus-bank" class="secondary-action" type="button" data-i18n="bonusResetBank"></button>
+              <button id="btn-bonus-cooldown" class="secondary-action" type="button" data-i18n="bonusResetCooldown"></button>
+            </div>
+            <form data-section="bonus" class="dt-form">
+              <label class="dt-check"><input name="bonus.enabled" data-kind="bool" type="checkbox" /><span data-i18n="bonusEnabled"></span></label>
+              <label class="dt-check"><input name="bonus.showObs" data-kind="bool" type="checkbox" /><span data-i18n="bonusShowObs"></span></label>
+              <div class="dt-pair">
+                <label class="dt-field"><span data-i18n="bonusPercent"></span><input name="bonus.percent" data-kind="number" type="number" min="0" max="500" step="any" /></label>
+                <label class="dt-field"><span data-i18n="bonusCooldown"></span><input name="bonus.cooldownMin" data-kind="number" type="number" min="0" /></label>
+                <label class="dt-field"><span data-i18n="bonusDurMin"></span><input name="bonus.durationMin" data-kind="number" type="number" min="1" /></label>
+                <label class="dt-field"><span data-i18n="bonusDurMax"></span><input name="bonus.durationMax" data-kind="number" type="number" min="1" /></label>
+                <label class="dt-field"><span data-i18n="bonusBankStep"></span><input name="bonus.bankStep" data-kind="number" type="number" min="0" step="any" /></label>
+                <label class="dt-field"><span data-i18n="bonusWhale"></span><input name="bonus.whale" data-kind="number" type="number" min="0" step="any" /></label>
+              </div>
+              <label class="dt-check"><input name="bonus.onGoal" data-kind="bool" type="checkbox" /><span data-i18n="bonusOnGoal"></span></label>
+              <label class="dt-field"><span data-i18n="bonusTitle1"></span><input name="bonus.title1" data-kind="text" type="text" maxlength="200" /></label>
+              <label class="dt-field"><span data-i18n="bonusTitle2"></span><input name="bonus.title2" data-kind="text" type="text" maxlength="200" /></label>
+              <label class="dt-check"><input name="bonus.bombSound" data-kind="bool" type="checkbox" /><span data-i18n="bonusBomb"></span></label>
+              <label class="dt-field"><span data-i18n="bonusOpenSound"></span><input name="bonus.openSoundUrl" data-kind="text" type="url" placeholder="https://…" /></label>
+              <label class="dt-field"><span data-i18n="bonusVolume"></span><input name="bonus.volume" data-kind="number" type="number" min="0" max="100" /></label>
+              <p class="dt-hint" data-i18n="bonusHint"></p>
+              <button class="primary-action" type="submit" data-i18n="save"></button>
+            </form>
+          </section>
+
+          <section class="dt-card">
+            <h2 data-i18n="secTimeGoal"></h2>
+            <p class="dt-muted"><span data-i18n="timeGoalNow"></span>: <b id="time-goal-now">—</b></p>
+            <form data-section="timeGoal" class="dt-form">
+              <label class="dt-check"><input name="timeGoal.enabled" data-kind="bool" type="checkbox" /><span data-i18n="enabled"></span></label>
+              <div class="dt-pair">
+                <label class="dt-field"><span data-i18n="timeGoalHours"></span><input name="timeGoal.hours" data-kind="text" type="text" inputmode="numeric" pattern="\d*" maxlength="6" /></label>
+                <label class="dt-field"><span data-i18n="title"></span><input name="timeGoal.title" data-kind="text" type="text" maxlength="200" /></label>
+              </div>
+              <label class="dt-field"><span data-i18n="timeGoalDone"></span><input name="timeGoal.done" data-kind="text" type="text" maxlength="200" /></label>
+              <p class="dt-hint" data-i18n="timeGoalHint"></p>
+              <div class="dt-row">
+                <button class="primary-action" type="submit" data-i18n="save"></button>
+                <button id="btn-time-goal-reset" class="secondary-action" type="button" data-i18n="recalc"></button>
+              </div>
+            </form>
+          </section>
+
+          <section class="dt-card">
+            <h2 data-i18n="secWidgets"></h2>
+            <p class="dt-hint" data-i18n="widgetsHint"></p>
+            <ul id="widgets" class="dt-widgets"></ul>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

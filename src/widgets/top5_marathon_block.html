@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ru" data-accent="orange">
+<head>
+<script src="bridge.js"></script>
+  <meta charset="UTF-8" />
+  <title>Top6 Marathon Block</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    :root{
+      --bg: rgba(0,0,0,0.55);
+      --gold:#f6b34a;
+      --gold2:#ffcf7a;
+      --gold-rgb:246,179,74;
+      --gold2-rgb:255,207,122;
+      --stroke: rgba(var(--gold2-rgb), 0.18);
+      --text:#f3f3f3;
+      --muted: rgba(243,243,243,0.72);
+      --soft: rgba(255,255,255,0.08);
+    }
+    html[data-accent="purple"]{
+      --gold:#c084fc;
+      --gold2:#e9d5ff;
+      --gold-rgb:192,132,252;
+      --gold2-rgb:233,213,255;
+    }
+    html[data-accent="green"]{
+      --gold:#4ade80;
+      --gold2:#bbf7d0;
+      --gold-rgb:74,222,128;
+      --gold2-rgb:187,247,208;
+    }
+    html[data-accent="blue"]{
+      --gold:#38bdf8;
+      --gold2:#bae6fd;
+      --gold-rgb:56,189,248;
+      --gold2-rgb:186,230,253;
+    }
+    html[data-accent="red"]{
+      --gold:#FF3232;
+      --gold2:#FFB3B3;
+      --gold-rgb:255,50,50;
+      --gold2-rgb:255,179,179;
+    }
+    html[data-accent="pink"]{
+      --gold:#FF5F87;
+      --gold2:#FFB0C8;
+      --gold-rgb:255,95,135;
+      --gold2-rgb:255,176,200;
+    }
+    html[data-accent="yellow"]{
+      --gold:#FFE600;
+      --gold2:#FFF566;
+      --gold-rgb:255,230,0;
+      --gold2-rgb:255,245,102;
+    }
+    html[data-accent="lime"]{
+      --gold:#CDFF5F;
+      --gold2:#E8FFA5;
+      --gold-rgb:205,255,95;
+      --gold2-rgb:232,255,165;
+    }
+    html[data-accent="navy"]{
+      --gold:#5F65FF;
+      --gold2:#B8BBFF;
+      --gold-rgb:95,101,255;
+      --gold2-rgb:184,187,255;
+    }
+    html[data-accent="gray"]{
+      --gold:#484848;
+      --gold2:#A8A8A8;
+      --gold-rgb:72,72,72;
+      --gold2-rgb:168,168,168;
+    }
+    html, body{
+      margin:0; padding:0;
+      width:100%;
+      min-height:100%;
+      background: transparent;
+      overflow: visible;
+      font-family: "Segoe UI", Arial, sans-serif;
+      user-select:none;
+    }
+    body{
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .card{
+      width: 320px;
+      min-width: 280px;
+      max-width: 420px;
+      height: auto;
+      min-height: 0;
+      box-sizing: border-box;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border: 1px solid transparent;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: background 0.55s ease, border-color 0.55s ease, box-shadow 0.55s ease;
+    }
+    .card.phase-calm {
+      transition: background 1.05s ease, border-color 1.05s ease, box-shadow 1.05s ease;
+      background:
+        radial-gradient(900px 280px at 80% 0%, rgba(var(--gold-rgb),0.18), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,0.62), var(--bg));
+      border-color: var(--stroke);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .card.phase-green {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(200,255,46,0.22), transparent 58%),
+        linear-gradient(180deg, rgba(18,28,10,0.72), rgba(0,0,0,0.58));
+      border-color: rgba(200, 255, 46, 0.36);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 22px rgba(200,255,46,0.12);
+    }
+    .card.phase-yellow {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(242,220,56,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(28,26,8,0.72), rgba(0,0,0,0.58));
+      border-color: rgba(242, 220, 56, 0.38);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 24px rgba(242,220,56,0.12);
+    }
+    .card.warning {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(255,170,0,0.28), transparent 58%),
+        linear-gradient(180deg, rgba(38,22,0,0.74), rgba(0,0,0,0.58));
+      border-color: rgba(255, 170, 0, 0.42);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 26px rgba(255,170,0,0.14);
+    }
+    .card.danger {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(255,59,59,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(42,10,10,0.76), rgba(0,0,0,0.58));
+      border-color: rgba(255, 90, 90, 0.48);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.28), 0 0 28px rgba(255,59,59,0.16);
+    }
+    .card.danger-critical {
+      background:
+        radial-gradient(780px 240px at 75% 0%, rgba(226,0,0,0.34), transparent 55%),
+        linear-gradient(180deg, rgba(48,4,4,0.82), rgba(0,0,0,0.62));
+      border-color: rgba(226, 0, 0, 0.55);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.32), 0 0 32px rgba(226,0,0,0.22);
+    }
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content: center;
+      width: 100%;
+      text-align: center;
+    }
+    .header-inner{
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .title{
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      line-height: 1.25;
+      white-space: normal;
+      word-break: break-word;
+      text-align: center;
+      width: 100%;
+      transition: color 0.55s ease;
+    }
+    .card.phase-yellow .title{
+      color: rgba(248, 236, 168, 0.85);
+    }
+    .card.phase-green .title{
+      color: rgba(215, 255, 165, 0.88);
+    }
+    .card.warning .title{
+      color: rgba(255, 218, 175, 0.88);
+    }
+    .card.danger .title{
+      color: rgba(255, 205, 200, 0.9);
+    }
+    .card.danger-critical .title{
+      color: rgba(255, 215, 210, 0.93);
+    }
+    .subtitle{
+      color: rgba(243,243,243,0.58);
+      font-size: 15.18px;
+      margin-top: 0;
+      letter-spacing: 0.04em;
+      line-height: 1.3;
+      white-space: normal;
+      text-align: center;
+      width: 100%;
+      transition: color 0.55s ease;
+    }
+    .card.phase-yellow .subtitle{
+      color: rgba(236, 224, 140, 0.82);
+    }
+    .card.phase-green .subtitle{
+      color: rgba(215, 255, 175, 0.82);
+    }
+    .card.warning .subtitle{
+      color: rgba(255, 205, 160, 0.84);
+    }
+    .card.danger .subtitle{
+      color: rgba(255, 188, 185, 0.86);
+    }
+    .card.danger-critical .subtitle{
+      color: rgba(255, 198, 195, 0.88);
+    }
+    .subtitle--footer{
+      padding-top: 2px;
+    }
+    .subtitle.subtitle--goal{
+      font-weight: 800;
+      font-size: 18.2px;
+      font-variant-numeric: tabular-nums;
+      color: var(--gold2);
+    }
+    .card.phase-yellow .subtitle.subtitle--goal{
+      color: #F2DC38;
+    }
+    .card.phase-green .subtitle.subtitle--goal{
+      color: #C8FF2E;
+    }
+    .card.warning .subtitle.subtitle--goal{
+      color: #ffaa00;
+    }
+    .card.danger .subtitle.subtitle--goal{
+      color: #ff3b3b;
+    }
+    .card.danger-critical .subtitle.subtitle--goal{
+      color: #E20000;
+    }
+    .on-air-wrap{
+      margin-top: 1px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    #onAirClock{
+      line-height: 1;
+      font-size: 31.2px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+      color: var(--gold2);
+      text-shadow: none;
+      min-height: 1em;
+      transition: color 0.55s ease;
+    }
+    .card.phase-yellow #onAirClock{
+      color: #F2DC38;
+    }
+    .card.phase-green #onAirClock{
+      color: #C8FF2E;
+    }
+    .card.warning #onAirClock{
+      color: #ffaa00;
+    }
+    .card.danger #onAirClock{
+      color: #ff3b3b;
+    }
+    .card.danger-critical #onAirClock{
+      color: #E20000;
+    }
+    #onAirClock .flip-timer-row {
+      display: inline-flex;
+      align-items: stretch;
+      line-height: 1;
+      vertical-align: middle;
+      transform-origin: center center;
+      justify-content: center;
+      transition: filter 0.55s ease;
+    }
+    .card.phase-calm #onAirClock .flip-timer-row {
+      filter: drop-shadow(0 0 10px rgba(var(--gold-rgb),0.28));
+    }
+    .card.phase-yellow #onAirClock .flip-timer-row {
+      filter: drop-shadow(0 0 12px rgba(242,220,56,0.38));
+    }
+    .card.phase-green #onAirClock .flip-timer-row {
+      filter: drop-shadow(0 0 12px rgba(200,255,46,0.38));
+    }
+    .card.warning #onAirClock .flip-timer-row {
+      filter: drop-shadow(0 0 12px rgba(255,170,0,0.42));
+    }
+    .card.danger #onAirClock .flip-timer-row {
+      filter: drop-shadow(0 0 14px rgba(255,59,59,0.45));
+    }
+    .card.danger-critical #onAirClock .flip-timer-row {
+      filter: drop-shadow(0 0 14px rgba(226,0,0,0.5));
+    }
+    #onAirClock .flip-timer-row * {
+      text-shadow: none !important;
+    }
+    #onAirClock .flip-digit-slot {
+      display: inline-block;
+      height: 1em;
+      width: 1ch;
+      min-width: 1ch;
+      max-width: 1ch;
+      box-sizing: border-box;
+      text-align: center;
+      overflow: visible;
+      vertical-align: top;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 5px, #000 calc(100% - 5px), transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0px, #000 5px, #000 calc(100% - 5px), transparent 100%);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+    #onAirClock .flip-digit-track {
+      display: flex;
+      flex-direction: column;
+      transition: none;
+      will-change: transform;
+    }
+    #onAirClock .flip-digit-char {
+      height: 1em;
+      line-height: 1em;
+      flex-shrink: 0;
+    }
+    #onAirClock .flip-colon {
+      display: inline-block;
+      width: 0.34em;
+      min-width: 0.34em;
+      max-width: 0.34em;
+      box-sizing: border-box;
+      text-align: center;
+      flex-shrink: 0;
+      pointer-events: none;
+      opacity: 0.92;
+    }
+    #onAirClock .flip-literal {
+      display: inline-block;
+      line-height: 1em;
+      vertical-align: top;
+      font-weight: 900;
+      flex-shrink: 0;
+      pointer-events: none;
+      padding: 0 0.06em;
+    }
+    .list{
+      flex: 0 0 auto;
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.55s ease, border-color 0.55s ease;
+    }
+    .card.phase-yellow .list{
+      background: rgba(38, 34, 10, 0.48);
+      border-color: rgba(242, 220, 56, 0.14);
+    }
+    .card.phase-green .list{
+      background: rgba(22, 32, 12, 0.48);
+      border-color: rgba(200, 255, 46, 0.14);
+    }
+    .card.warning .list{
+      background: rgba(44, 28, 0, 0.48);
+      border-color: rgba(255, 170, 0, 0.18);
+    }
+    .card.danger .list{
+      background: rgba(42, 14, 14, 0.5);
+      border-color: rgba(255, 90, 90, 0.2);
+    }
+    .card.danger-critical .list{
+      background: rgba(38, 6, 6, 0.55);
+      border-color: rgba(226, 0, 0, 0.26);
+    }
+    .item{
+      display:grid;
+      grid-template-columns: 22px 1fr auto;
+      grid-template-rows: auto auto;
+      column-gap: 10px;
+      row-gap: 3px;
+      align-items: center;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      padding: 5px 6px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: border-color 0.25s ease, background 0.25s ease;
+    }
+    /* 1-е место — всегда «марафонное золото», не акцент темы */
+    .item.rank-1{
+      border-color: rgba(246,179,74,0.42);
+      background: rgba(246,179,74,0.07);
+      animation: blockRowPulse 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    }
+    .item.rank-1 .rank{
+      background: linear-gradient(180deg, #ffcf7a, #f6b34a);
+      box-shadow: 0 10px 18px rgba(246,179,74,0.18);
+      animation: blockRankPulse 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    }
+    .item.rank-1 .pct{
+      color: #ffcf7a;
+      text-shadow: 0 0 18px rgba(246,179,74,0.22);
+    }
+    .item.rank-2{
+      border-color: rgba(200,210,220,0.22);
+      background: rgba(255,255,255,0.04);
+    }
+    .item.rank-2 .rank{
+      background: linear-gradient(180deg, #f0f4f8, #c0cad4);
+      box-shadow: 0 4px 12px rgba(200,210,220,0.2);
+    }
+    .item.rank-3{
+      border-color: rgba(205,150,110,0.28);
+      background: rgba(205,150,110,0.06);
+    }
+    .item.rank-3 .rank{
+      background: linear-gradient(180deg, #e8c4a8, #c9956c);
+      box-shadow: 0 4px 12px rgba(205,150,110,0.2);
+    }
+    .item.rank-4 .rank,
+    .item.rank-5 .rank,
+    .item.rank-6 .rank{
+      background: rgba(70,72,82,0.95);
+      color: rgba(245,245,245,0.95);
+      box-shadow: none;
+    }
+    .item.rank-4,
+    .item.rank-5,
+    .item.rank-6{
+      opacity: 0.95;
+    }
+    .rank{
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 12px;
+      font-weight: 900;
+      color: #151515;
+      background: linear-gradient(180deg, var(--gold2), var(--gold));
+      box-shadow: 0 10px 18px rgba(var(--gold-rgb),0.18);
+      flex: 0 0 auto;
+    }
+    .name{
+      grid-column: 2;
+      grid-row: 1;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      font-weight: 900;
+    }
+    .pct{
+      grid-column: 3;
+      grid-row: 1;
+      color: var(--gold2);
+      text-shadow: 0 0 18px rgba(var(--gold-rgb),0.22);
+      font-weight: 900;
+    }
+    .bar{
+      grid-column: 2 / span 2;
+      grid-row: 2;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.06);
+      overflow:hidden;
+    }
+    .bar > i{
+      display:block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(var(--gold-rgb),0.35), rgba(var(--gold2-rgb),0.95));
+      box-shadow: 0 0 10px rgba(var(--gold-rgb),0.2);
+      border-radius: 999px;
+      transition: width 0.45s ease;
+    }
+    .item.rank-1 .bar > i{
+      background: linear-gradient(90deg,
+        rgba(246,179,74,0.55),
+        rgba(255,207,122,1),
+        rgba(246,179,74,0.55));
+      box-shadow: 0 0 10px rgba(246,179,74,0.2);
+      background-size: 180% 100%;
+      animation: blockBarShine 2.6s ease-in-out infinite;
+    }
+    /* 2–3 место: заливка полоски как у кружка ранга (серебро / бронза) */
+    .item.rank-2 .bar > i{
+      background: linear-gradient(90deg,
+        rgba(200,210,220,0.4),
+        rgba(240,244,248,0.92),
+        rgba(192,202,212,0.95));
+      box-shadow: 0 0 10px rgba(200,210,220,0.28);
+    }
+    .item.rank-3 .bar > i{
+      background: linear-gradient(90deg,
+        rgba(205,150,110,0.35),
+        rgba(232,196,168,0.92),
+        rgba(201,149,108,0.95));
+      box-shadow: 0 0 10px rgba(205,150,110,0.26);
+    }
+    .empty{
+      color: rgba(243,243,243,0.55);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    @keyframes blockRowPulse{
+      0%, 100%{ opacity: 1; filter: brightness(1) saturate(1); }
+      50%{ opacity: 0.93; filter: brightness(1.06) saturate(1.1); }
+    }
+    @keyframes blockRankPulse{
+      0%, 100%{ transform: scale(1); }
+      50%{ transform: scale(1.04); }
+    }
+    @keyframes blockBarShine{
+      0%, 100%{ background-position: 0% 50%; }
+      50%{ background-position: 100% 50%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card phase-calm" id="top5MarathonCard">
+    <div class="header">
+      <div class="header-inner">
+        <div id="title" class="title">Топ 6</div>
+        <div class="on-air-wrap">
+          <div id="onAirClock" class="on-air-clock"></div>
+        </div>
+      </div>
+    </div>
+    <div id="list" class="list">
+      <div class="empty">—</div>
+    </div>
+    <div id="marathonShareLine" class="subtitle subtitle--footer">Доля от суммы донатов за марафон</div>
+  </div>
+
+  <script src="marathon_accent_transition.js"></script>
+  <script>
+    function getFileText(path) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', path + '?cache_bust=' + Date.now() + '_' + Math.random(), true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200 || xhr.status === 0) resolve(xhr.responseText);
+            else reject(xhr.status);
+          }
+        };
+        xhr.send();
+      });
+    }
+
+    MarathonAccent.start(900);
+
+    async function tickPhase(){
+      try{
+        var card = document.getElementById('top5MarathonCard');
+        if (!card) return;
+        var blinkOn = false;
+        try{
+          blinkOn = (await getFileText('blink.flag')).trim() === '1';
+        }catch(e1){}
+        var sec = null;
+        if (!blinkOn){
+          try{
+            var ttxt = (await getFileText('timer.txt')).trim();
+            if (ttxt){
+              var pp = ttxt.split(':');
+              if (pp.length === 3){
+                var H = parseInt(pp[0], 10);
+                var M = parseInt(pp[1], 10);
+                var S = parseInt(pp[2], 10);
+                if (!isNaN(H) && !isNaN(M) && !isNaN(S)) sec = H * 3600 + M * 60 + S;
+              }
+            }
+          }catch(e2){}
+        }
+        var phaseClass = 'phase-calm';
+        if (blinkOn || (sec !== null && sec <= 0)) phaseClass = 'danger-critical';
+        else if (sec !== null){
+          if (sec > 7200) phaseClass = 'phase-calm';
+          else if (sec > 3600) phaseClass = 'phase-green';
+          else if (sec > 1800) phaseClass = 'phase-yellow';
+          else if (sec > 600) phaseClass = 'warning';
+          else if (sec > 300) phaseClass = 'danger';
+          else phaseClass = 'danger-critical';
+        }
+        card.className = 'card ' + phaseClass;
+      }catch(e){}
+    }
+
+    const onAirClock = document.getElementById('onAirClock');
+    const DIGIT_FLIP_ON_AIR = 'transform 0.58s cubic-bezier(0.22, 1, 0.36, 1)';
+    let onAirDigitsInitialized = false;
+    let lastOnAirSeconds = null;
+
+    function parseOnAirSeconds(raw) {
+      raw = (raw || '').trim();
+      if (!raw) return 0;
+      var parts = raw.split(':').map(function(x) { return x.trim(); });
+      if (parts.length !== 3) return 0;
+      var h = parseInt(parts[0], 10);
+      var m = parseInt(parts[1], 10);
+      var s = parseInt(parts[2], 10);
+      if (isNaN(h) || isNaN(m) || isNaN(s)) return 0;
+      return Math.max(0, h * 3600 + m * 60 + s);
+    }
+
+    function oaCreateDigitSlot(char) {
+      const slot = document.createElement('span');
+      slot.className = 'flip-digit-slot';
+      const track = document.createElement('span');
+      track.className = 'flip-digit-track';
+      const span = document.createElement('span');
+      span.className = 'flip-digit-char';
+      span.textContent = char;
+      track.appendChild(span);
+      slot.appendChild(track);
+      slot._track = track;
+      slot._current = char;
+      return slot;
+    }
+
+    function oaSetDigitImmediate(slot, ch) {
+      const track = slot._track;
+      track.style.transition = 'none';
+      track.innerHTML = '<span class="flip-digit-char">' + ch + '</span>';
+      track.style.transform = 'translateY(0)';
+      slot._current = ch;
+      void track.offsetHeight;
+      track.style.transition = '';
+    }
+
+    /** flipUp: время растёт — цифра «выезжает» снизу вверх (как начисление на других таймерах). */
+    function oaAnimateDigitFlip(slot, newChar, flipUp) {
+      const track = slot._track;
+      const oldChar = slot._current;
+      if (oldChar === newChar) return;
+      if (track._busy) {
+        track._queued = newChar;
+        track._queuedFlipUp = flipUp;
+        return;
+      }
+      track._busy = true;
+      track.style.transition = 'none';
+      track.innerHTML = '';
+      const sNew = document.createElement('span');
+      sNew.className = 'flip-digit-char';
+      sNew.textContent = newChar;
+      const sOld = document.createElement('span');
+      sOld.className = 'flip-digit-char';
+      sOld.textContent = oldChar;
+      if (flipUp) {
+        track.appendChild(sOld);
+        track.appendChild(sNew);
+        track.style.transform = 'translateY(0)';
+        void track.offsetHeight;
+        track.style.transition = DIGIT_FLIP_ON_AIR;
+        track.style.transform = 'translateY(-1em)';
+      } else {
+        track.appendChild(sNew);
+        track.appendChild(sOld);
+        track.style.transform = 'translateY(-1em)';
+        void track.offsetHeight;
+        track.style.transition = DIGIT_FLIP_ON_AIR;
+        track.style.transform = 'translateY(0)';
+      }
+      const onEnd = function(e) {
+        if (e.propertyName !== 'transform') return;
+        track.removeEventListener('transitionend', onEnd);
+        track.style.transition = 'none';
+        track.innerHTML = '<span class="flip-digit-char">' + newChar + '</span>';
+        track.style.transform = 'translateY(0)';
+        slot._current = newChar;
+        track._busy = false;
+        void track.offsetHeight;
+        track.style.transition = '';
+        if (track._queued && track._queued !== slot._current) {
+          const q = track._queued;
+          var qUp = track._queuedFlipUp;
+          track._queued = null;
+          track._queuedFlipUp = undefined;
+          requestAnimationFrame(function() { oaAnimateDigitFlip(slot, q, qUp); });
+        } else {
+          track._queued = null;
+          track._queuedFlipUp = undefined;
+        }
+      };
+      track.addEventListener('transitionend', onEnd);
+    }
+
+    function pad2oa(n) {
+      n = Math.floor(Math.max(0, n));
+      return (n < 10 ? '0' : '') + n;
+    }
+
+    function isOnAirLiteral(ch) {
+      return ch === 'd' || ch === ' ';
+    }
+
+    function appendOnAirChar(row, ch) {
+      if (ch === ':') {
+        var sep = document.createElement('span');
+        sep.className = 'flip-colon';
+        sep.textContent = ':';
+        row.appendChild(sep);
+      } else if (isOnAirLiteral(ch)) {
+        var lit = document.createElement('span');
+        lit.className = 'flip-literal';
+        lit.textContent = ch;
+        row.appendChild(lit);
+      } else {
+        row.appendChild(oaCreateDigitSlot(ch));
+      }
+    }
+
+    function formatOnAirFlat(totalSeconds) {
+      var sec = Math.max(0, Math.floor(Number(totalSeconds)));
+      if (!isFinite(sec)) sec = 0;
+      var flat = [];
+      var key;
+      if (sec < 60) {
+        var onlyS = String(sec);
+        key = 's' + onlyS;
+        for (var i = 0; i < onlyS.length; i++) flat.push(onlyS.charAt(i));
+      } else if (sec < 3600) {
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        var mStr = String(m);
+        var sStr = pad2oa(s);
+        key = 'ms' + m + '_' + s;
+        for (var mi = 0; mi < mStr.length; mi++) flat.push(mStr.charAt(mi));
+        flat.push(':');
+        flat.push(sStr.charAt(0), sStr.charAt(1));
+      } else if (sec < 86400) {
+        var h = Math.floor(sec / 3600);
+        var m2 = Math.floor((sec % 3600) / 60);
+        var s2 = sec % 60;
+        var hStr = pad2oa(h);
+        var mStr2 = pad2oa(m2);
+        var sStr2 = pad2oa(s2);
+        key = 'hms' + h + '_' + m2 + '_' + s2;
+        flat.push(hStr.charAt(0), hStr.charAt(1), ':', mStr2.charAt(0), mStr2.charAt(1), ':', sStr2.charAt(0), sStr2.charAt(1));
+      } else {
+        var days = Math.floor(sec / 86400);
+        var rem = sec % 86400;
+        var h3 = Math.floor(rem / 3600);
+        var m3 = Math.floor((rem % 3600) / 60);
+        var s3 = rem % 60;
+        var dStr = String(days);
+        var hStr3 = pad2oa(h3);
+        var mStr3 = pad2oa(m3);
+        var sStr3 = pad2oa(s3);
+        key = 'd' + days + '_' + h3 + '_' + m3 + '_' + s3;
+        for (var di = 0; di < dStr.length; di++) flat.push(dStr.charAt(di));
+        flat.push('d', ' ');
+        flat.push(hStr3.charAt(0), hStr3.charAt(1), ':', mStr3.charAt(0), mStr3.charAt(1), ':', sStr3.charAt(0), sStr3.charAt(1));
+      }
+      return { key: key, flat: flat };
+    }
+
+    function setFlipOnAirFromSeconds(totalSeconds, animate, flipDigitsUp) {
+      if (!onAirClock) return;
+      var formatted = formatOnAirFlat(totalSeconds);
+      var flat = formatted.flat;
+      var pKey = formatted.key + '_' + flat.length;
+      var row = onAirClock.querySelector('.flip-timer-row');
+      var localAnimate = animate;
+      if (!row || row._pKey !== pKey) {
+        if (row) row.remove();
+        onAirClock.textContent = '';
+        row = document.createElement('div');
+        row.className = 'flip-timer-row';
+        row._pKey = pKey;
+        var prevFlat = Array.isArray(onAirClock._lastFlat) ? onAirClock._lastFlat : [];
+        if (prevFlat.length !== flat.length) {
+          prevFlat = flat.slice();
+          localAnimate = false;
+        }
+        for (var pj = 0; pj < prevFlat.length; pj++) {
+          appendOnAirChar(row, prevFlat[pj]);
+        }
+        onAirClock.appendChild(row);
+      }
+      row = onAirClock.querySelector('.flip-timer-row');
+      var digitSlots = [];
+      for (var ci = 0; ci < row.children.length; ci++) {
+        var node = row.children[ci];
+        if (node.classList && node.classList.contains('flip-digit-slot')) digitSlots.push(node);
+      }
+      var digitChars = flat.filter(function(ch) { return ch !== ':' && !isOnAirLiteral(ch); });
+      var apply = function() {
+        for (var di = 0; di < digitSlots.length; di++) {
+          var ch = digitChars[di];
+          if (ch === undefined) continue;
+          var slot = digitSlots[di];
+          if (!slot || slot._current === ch) continue;
+          if (localAnimate) oaAnimateDigitFlip(slot, ch, !!flipDigitsUp);
+          else oaSetDigitImmediate(slot, ch);
+        }
+      };
+      if (localAnimate) requestAnimationFrame(apply);
+      else apply();
+      onAirClock._lastFlat = flat.slice();
+    }
+
+    let _lastListKey = '';
+
+    function parsePct(pctRaw){
+      if (!pctRaw) return 0;
+      const s = String(pctRaw).replace("%","").replace(",",".").trim();
+      const v = Number(s);
+      if (!isFinite(v) || v < 0) return 0;
+      return Math.min(100, v);
+    }
+
+    function render(lines){
+      const items = (lines || []).filter(Boolean).slice(0,6);
+      const key = items.join('\n');
+      if (items.length && key === _lastListKey) return;
+      if (!items.length) _lastListKey = '';
+      else _lastListKey = key;
+
+      const el = document.getElementById('list');
+      el.innerHTML = "";
+      if (!items.length){
+        const d = document.createElement('div');
+        d.className = "empty";
+        d.textContent = "—";
+        el.appendChild(d);
+        return;
+      }
+      for (let idx = 0; idx < items.length; idx++){
+        const line = items[idx];
+        // ожидаем "Nick - 10,0%"
+        const parts = line.split(" - ");
+        const name = (parts[0] || "").trim();
+        const pct = (parts.slice(1).join(" - ") || "").trim();
+        const pctNum = parsePct(pct);
+
+        const rank = idx + 1;
+        const row = document.createElement('div');
+        row.className = "item rank-" + rank;
+
+        const rankEl = document.createElement('div');
+        rankEl.className = "rank";
+        rankEl.textContent = String(rank);
+
+        const nameEl = document.createElement('div');
+        nameEl.className = "name";
+        nameEl.textContent = name || "—";
+        const pctEl = document.createElement('div');
+        pctEl.className = "pct";
+        pctEl.textContent = pct || "";
+
+        const bar = document.createElement('div');
+        bar.className = "bar";
+        const fill = document.createElement('i');
+        fill.style.width = pctNum.toFixed(1) + "%";
+        bar.appendChild(fill);
+
+        row.appendChild(rankEl);
+        row.appendChild(nameEl);
+        row.appendChild(pctEl);
+        row.appendChild(bar);
+        el.appendChild(row);
+      }
+    }
+    async function tick(){
+      try{
+        const txt = (await getFileText('top5_marathon_list.txt')).trim();
+        if (!txt || txt === "—"){ render([]); return; }
+        const lines = txt.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+        render(lines);
+      }catch(e){}
+    }
+    async function tickTitle(){
+      try{
+        const t = (await getFileText('title.txt')).trim();
+        const title = t ? `Топ 6 за ${t}` : "Топ 6";
+        document.getElementById('title').textContent = title;
+      }catch(e){}
+    }
+    async function tickOnAir(){
+      try{
+        var raw = (await getFileText('on_air.txt')).trim();
+        // Пустой/обрезанный ответ при записи файла приложением — не затирать показ (иначе мигание 00:00:00).
+        if (!raw || !/^\d+:\d{2}:\d{2}$/.test(raw)) return;
+        var sec = parseOnAirSeconds(raw);
+        var prev = lastOnAirSeconds;
+        var animate = onAirDigitsInitialized && prev !== null && sec !== prev;
+        var flipUp = prev === null || sec >= prev;
+        setFlipOnAirFromSeconds(sec, animate, flipUp);
+        onAirDigitsInitialized = true;
+        lastOnAirSeconds = sec;
+      }catch(e){}
+    }
+    const MARATHON_SHARE_PHRASE = "Доля от суммы донатов за марафон";
+    async function tickTimeGoal(){
+      try{
+        var el = document.getElementById('marathonShareLine');
+        if (!el) return;
+        var raw = (await getFileText('marathon_time_goal.txt')).replace(/^\uFEFF/, '');
+        if (!raw.trim()){
+          el.textContent = MARATHON_SHARE_PHRASE;
+          el.classList.remove('subtitle--goal');
+          return;
+        }
+        var shown = null;
+        if (raw.charAt(0) === 'D' && raw.charAt(1) === '\t'){
+          shown = raw.slice(2).trim();
+          if (!shown) return;
+        } else if (raw.charAt(0) === 'T' && raw.charAt(1) === '\t'){
+          shown = raw.slice(2).trim();
+          if (!/^(?:.*: )?\d+:\d{2}:\d{2}$/.test(shown)) return;
+        } else {
+          shown = raw.trim();
+          if (!/^(?:.*: )?\d+:\d{2}:\d{2}$/.test(shown)) return;
+        }
+        el.textContent = shown;
+        el.classList.add('subtitle--goal');
+      }catch(e){}
+    }
+    tick();
+    tickTitle();
+    tickOnAir();
+    tickTimeGoal();
+    tickPhase();
+    setInterval(tick, 1000);
+    setInterval(tickTitle, 1000);
+    setInterval(tickOnAir, 1000);
+    setInterval(tickTimeGoal, 1000);
+    setInterval(tickPhase, 1000);
+  </script>
+</body>
+</html>

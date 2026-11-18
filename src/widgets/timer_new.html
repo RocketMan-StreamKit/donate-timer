@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<script src="bridge.js"></script>
+    <meta charset="UTF-8">
+    <title>Донатный Таймер</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            height: 100vh;
+            width: 100vw;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-size: 5rem;
+            font-weight: bold;
+            /* Свечение — только на самих цифрах таймера (через #container) */
+            text-shadow: none;
+            position: relative;
+            z-index: 10;
+        }
+        #addedTime {
+            position: absolute;
+            top: calc(50% - 50px);
+            left: 50%;
+            font-size: 3rem;
+            transform: translate(-50%, -50%);
+            color: #00ff88;
+            opacity: 0;
+            transition: all 0.6s ease-out;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .danger {
+            text-shadow: 0 0 10px #ff3b3b !important;
+            animation: dangerPulse 0.8s ease-in-out infinite;
+        }
+        .warning {
+            text-shadow: 0 0 10px #ffaa00 !important;
+            animation: warningPulse 0.8s ease-in-out infinite;
+        }
+        @keyframes warningPulse {
+            0% { text-shadow: 0 0 10px #ffaa00; transform: scale(1); }
+            50% { text-shadow: 0 0 40px #ffaa00; transform: scale(1.05); }
+            100% { text-shadow: 0 0 10px #ffaa00; transform: scale(1); }
+        }
+        @keyframes dangerPulse {
+            0% { text-shadow: 0 0 20px #ff3b3b; transform: scale(1); }
+            50% { text-shadow: 0 0 80px #ff3b3b; transform: scale(1.05); }
+            100% { text-shadow: 0 0 20px #ff3b3b; transform: scale(1); }
+        }
+        .fadeIn {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .normal {
+            color: #ffffff;
+            text-shadow: 0 0 16px #111, 0 0 4px #000;
+        }
+        @keyframes orangePulse {
+            0% { text-shadow: 0 0 10px #ffaa00; transform: scale(1); }
+            50% { text-shadow: 0 0 40px #ffaa00; transform: scale(1.05); }
+            100% { text-shadow: 0 0 10px #ffaa00; transform: scale(1); }
+        }
+        @keyframes e2redPulse {
+            0% { text-shadow: 0 0 20px #E20000, 0 0 10px #E20000; transform: scale(1); }
+            50% { text-shadow: 0 0 80px #E20000, 0 0 40px #E20000; transform: scale(1.05); }
+            100% { text-shadow: 0 0 20px #E20000, 0 0 10px #E20000; transform: scale(1); }
+        }
+        #titleInfo {
+            font-size: 2rem;
+            font-weight: normal;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+            color: #fff;
+            text-shadow: 0 0 7px #222, 0 0 3px #000;
+            margin-bottom: 16px;
+        }
+        #rateInfo {
+            font-size: 1.7rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            min-width: 400px;
+            max-width: 1000px;
+            pointer-events: none;
+            color: #fff;
+            text-shadow: 0 0 7px #222, 0 0 3px #000;
+            z-index: 20;
+            margin-top: -11px;
+            white-space: nowrap;
+        }
+        #blinkTop-time, #blinkTop-hurry, #blinkBottom-time, #blinkBottom-hurry {
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #blinkTop-time.visible, #blinkBottom-time.visible, #blinkTop-hurry.visible, #blinkBottom-hurry.visible {
+            opacity: 1;
+        }
+        .blinkText {
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .blinkText.visible {
+            opacity: 1;
+        }
+        #container {
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum" 1, "lnum" 1;
+            margin-top: -4px;
+        }
+        /* Единое свечение на всю строку цифр — без обрезки text-shadow по каждому слоту */
+        #container .flip-timer-row {
+            display: inline-flex;
+            align-items: stretch;
+            line-height: 1;
+            vertical-align: middle;
+            transform-origin: center center;
+            text-shadow: none !important;
+            flex-shrink: 0;
+            justify-content: center;
+        }
+        #container .flip-timer-row * {
+            text-shadow: none !important;
+        }
+        /* Фаза свечения (filter на всю группу) */
+        .timer-glow-white {
+            filter: drop-shadow(0 0 8px rgba(17, 17, 17, 0.38)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.52));
+            animation: none;
+            transform: none;
+        }
+        .timer-glow-yellow {
+            filter: drop-shadow(0 0 12px rgba(242, 220, 56, 0.4)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.35));
+            animation: none;
+            transform: none;
+        }
+        .timer-glow-lime {
+            filter: drop-shadow(0 0 12px rgba(200, 255, 46, 0.42)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.32));
+            animation: none;
+            transform: none;
+        }
+        .timer-glow-orange {
+            animation: timerRowGlowOrange 0.8s ease-in-out infinite;
+        }
+        .timer-glow-red {
+            animation: timerRowGlowRed 0.8s ease-in-out infinite;
+        }
+        .timer-glow-redcrit {
+            filter: drop-shadow(0 0 14px rgba(226, 0, 0, 0.48)) drop-shadow(0 0 5px rgba(226, 0, 0, 0.32));
+            animation: none;
+            transform: none;
+        }
+        @keyframes timerRowGlowOrange {
+            0%, 100% {
+                filter: drop-shadow(0 0 8px rgba(255, 170, 0, 0.68)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.28));
+                transform: scale(1);
+            }
+            50% {
+                filter: drop-shadow(0 0 22px rgba(255, 170, 0, 0.88)) drop-shadow(0 0 4px rgba(0, 0, 0, 0.22));
+                transform: scale(1.05);
+            }
+        }
+        @keyframes timerRowGlowRed {
+            0%, 100% {
+                filter: drop-shadow(0 0 10px rgba(255, 59, 59, 0.68)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.26));
+                transform: scale(1);
+            }
+            50% {
+                filter: drop-shadow(0 0 28px rgba(255, 59, 59, 0.84)) drop-shadow(0 0 5px rgba(0, 0, 0, 0.2));
+                transform: scale(1.05);
+            }
+        }
+        .flip-digit-slot {
+            display: inline-block;
+            height: 1em;
+            width: 1ch;
+            min-width: 1ch;
+            max-width: 1ch;
+            box-sizing: border-box;
+            text-align: center;
+            overflow: visible;
+            vertical-align: top;
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum" 1, "lnum" 1;
+            /* Вертикальный fade для смены цифры (+~2px к зоне прозрачности сверху/снизу) */
+            /* Узкая полоса прозрачности у самого края слота — не съедает основную форму цифры */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 5px, #000 calc(100% - 5px), transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0px, #000 5px, #000 calc(100% - 5px), transparent 100%);
+            -webkit-mask-size: 100% 100%;
+            mask-size: 100% 100%;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+        }
+        .flip-digit-track {
+            display: flex;
+            flex-direction: column;
+            transition: none;
+            will-change: transform;
+        }
+        .flip-digit-char {
+            height: 1em;
+            line-height: 1em;
+            flex-shrink: 0;
+        }
+        .flip-colon {
+            display: inline-block;
+            width: 0.34em;
+            min-width: 0.34em;
+            max-width: 0.34em;
+            box-sizing: border-box;
+            text-align: center;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="blinkTop-time" class="blinkText" style="position:absolute; left:50%; top:calc(50% - 160px); transform:translateX(-50%); font-size:3rem; font-weight:bold; color:#ff3b3b; text-shadow:0 0 40px #ff3b3b, 0 0 10px #ff3b3b; z-index:30; pointer-events:none; text-transform:uppercase;">ВРЕМЯ</div>
+    <div id="blinkTop-hurry" class="blinkText" style="position:absolute; left:50%; top:calc(50% - 125px); transform:translateX(-50%); font-size:1.5rem; font-weight:bold; color:#ffaa00; text-shadow:0 0 40px #000, 0 0 10px #000; z-index:30; pointer-events:none; text-transform:uppercase;">ПРОДЛИМ</div>
+    <div id="blinkTop-warning" class="blinkText" style="position:absolute; left:50%; top:calc(50% - 125px); transform:translateX(-50%); font-size:1.5rem; font-weight:bold; color:#ff3b3b; text-shadow:0 0 40px #ff3b3b, 0 0 10px #ff3b3b; z-index:30; pointer-events:none; text-transform:uppercase;">ВРЕМЯ</div>
+    <div id="titleInfo" class="normal" style="position:absolute; left:50%; top:calc(50% - 90px); transform:translateX(-50%); font-size:2rem; font-weight:normal; text-align:center; width:100%; pointer-events:none; text-shadow: 0 0 7px #222, 0 0 3px #000;"></div>
+    <div id="timerBlock" style="position:relative; display:inline-block;">
+        <div id="container" class="normal">Таймер</div>
+        <div id="rateInfo" class="normal" style="position:absolute; left:50%; top:calc(100% + 16px); transform:translateX(-50%); font-weight:bold; text-align:center; width:100%; pointer-events:none; text-shadow: 0 0 7px #222, 0 0 3px #000; z-index:20; margin-top:-19px;">...</div>
+    </div>
+    <div id="blinkBottom-time" class="blinkText" style="position:absolute; left:50%; top:calc(50% + 110px); transform:translateX(-50%); font-size:3rem; font-weight:bold; color:#ff3b3b; text-shadow:0 0 40px #ff3b3b, 0 0 10px #ff3b3b; z-index:30; pointer-events:none; text-transform:uppercase;">ВЫШЛО!</div>
+    <div id="blinkBottom-hurry" class="blinkText" style="position:absolute; left:50%; top:calc(50% + 100px); transform:translateX(-50%); font-size:1.5rem; font-weight:bold; color:#ffaa00; text-shadow:0 0 40px #000, 0 0 10px #000; z-index:30; pointer-events:none; text-transform:uppercase;">СТРИМ?</div>
+    <div id="blinkBottom-warning" class="blinkText" style="position:absolute; left:50%; top:calc(50% + 100px); transform:translateX(-50%); font-size:1.5rem; font-weight:bold; color:#ff3b3b; text-shadow:0 0 40px #ff3b3b, 0 0 10px #ff3b3b; z-index:30; pointer-events:none; text-transform:uppercase;">НА ИСХОДЕ!</div>
+    <div id="addedTime"></div>
+    <div id="donationAlert" style="position:absolute; left:50%; top:calc(50% + 6px); transform:translate(-50%,-50%); opacity:0; background:rgba(0,0,0,0.85); border-radius:12px; padding:16px 11.5px; z-index:100; pointer-events:none; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 2s; max-width:unset; min-width:0; font-size:1.32em;">
+        <span id="donationAlertNick" style="font-weight:bold; color:#fff; font-size:3.23rem; word-break:break-all; text-align:center; white-space:nowrap; margin:0; padding:0; line-height:1.2;"></span>
+        <span id="donationAlertTime" style="color:#fff; font-size:1.94rem; text-align:center; margin:0; padding:0; line-height:1.2;"></span>
+    </div>
+
+    <script>
+        const container = document.getElementById('container');
+        let lastKnownSeconds = -1;
+        let isSyncing = false;
+        let timerDigitsInitialized = false;
+        /** Последнее значение из timer.txt (для детекта начисления). */
+        let lastServerSeconds = null;
+        /** Текущее «отображаемое» время (может плавно догонять файл во время анимации начисления). */
+        let visualSeconds = null;
+        /** Анимация начисления: from0 → to за durationMs (to обновляется с файлом, без лишних секунд). */
+        let grantState = null;
+        let grantRafId = 0;
+        /** Плашка доната и отложенное начисление на таймер */
+        const DONATION_ALERT_VISIBLE_MS = 10000;
+        const DONATION_ALERT_FADE_MS = 2000;
+        /** Пауза после начисления одного доната — затем следующая плашка из очереди */
+        const POST_GRANT_BEFORE_NEXT_ALERT_MS = 2200;
+        /** Если время выросло без активной плашки — ждём (ручное / гонка с файлом алерта), иначе стартуем накрутку */
+        const MANUAL_GRANT_WAIT_MS = 1100;
+        let donationGrantBarrierCount = 0;
+        let grantBumpDecisionTimer = null;
+        /** Ожидание решения «донат или ручное» после роста timer.txt */
+        let pendingGrantBump = null;
+        /** Очередь дельт timer.txt по донатам (FIFO): после каждой плашки начисляем ровно одну дельту, без двойного учёта. */
+        let pendingGrantDeltaQueue = [];
+
+        function pendingHiddenGrantSum() {
+            return pendingGrantDeltaQueue.reduce(function(a, b) { return a + b; }, 0);
+        }
+
+        function resetGrantDeferralAndBumpTimer() {
+            if (grantBumpDecisionTimer) {
+                clearTimeout(grantBumpDecisionTimer);
+                grantBumpDecisionTimer = null;
+            }
+            pendingGrantBump = null;
+            pendingGrantDeltaQueue.length = 0;
+        }
+
+        /** После закрытия плашки: начислить следующую дельту из очереди, затем (после паузы) следующая плашка. */
+        function beginGrantRevealForLastClosedAlert() {
+            if (pendingGrantDeltaQueue.length === 0) {
+                processDonationAlertQueue();
+                return;
+            }
+            const toSrv = lastServerSeconds;
+            if (toSrv === null || !isFinite(toSrv)) {
+                pendingGrantDeltaQueue.length = 0;
+                processDonationAlertQueue();
+                return;
+            }
+            stopGrantAnimation();
+            const head = pendingGrantDeltaQueue[0];
+            const remainingAfter = pendingHiddenGrantSum() - head;
+            const from = Math.max(0, Math.round(visualSeconds != null ? visualSeconds : toSrv - pendingHiddenGrantSum()));
+            const to = Math.max(from, toSrv - remainingAfter);
+            if (to > from) {
+                grantState = {
+                    from0: from,
+                    to: to,
+                    startT: performance.now(),
+                    durationMs: grantDurationMs(to - from),
+                    chainReveal: true,
+                    resumeDonationQueueAfter: true
+                };
+                visualSeconds = from;
+                kickGrantAnimation();
+            } else {
+                visualSeconds = to;
+                updateDisplay(to);
+                pendingGrantDeltaQueue.shift();
+                setTimeout(function() { processDonationAlertQueue(); }, POST_GRANT_BEFORE_NEXT_ALERT_MS);
+            }
+        }
+
+        function stopGrantAnimation() {
+            if (grantRafId) {
+                cancelAnimationFrame(grantRafId);
+                grantRafId = 0;
+            }
+            grantState = null;
+        }
+
+        function grantEase(t) {
+            t = Math.min(1, Math.max(0, t));
+            return t * t * (3 - 2 * t);
+        }
+
+        function grantDurationMs(deltaSec) {
+            return Math.min(12000, Math.max(280, Math.round(deltaSec * 52)));
+        }
+
+        const DIGIT_FLIP_TRANSITION = 'transform 0.58s cubic-bezier(0.22, 1, 0.36, 1)';
+
+        function grantStep() {
+            grantRafId = 0;
+            if (!grantState) return;
+            const now = performance.now();
+            const st = grantState;
+            const t = (now - st.startT) / st.durationMs;
+            if (t >= 1) {
+                visualSeconds = st.to;
+                updateDisplay(Math.round(visualSeconds));
+                if (st.chainReveal && pendingGrantDeltaQueue.length > 0) {
+                    pendingGrantDeltaQueue.shift();
+                }
+                const resumeQ = st.resumeDonationQueueAfter;
+                grantState = null;
+                if (resumeQ) {
+                    setTimeout(function() { processDonationAlertQueue(); }, POST_GRANT_BEFORE_NEXT_ALERT_MS);
+                }
+                return;
+            }
+            visualSeconds = st.from0 + (st.to - st.from0) * grantEase(t);
+            updateDisplay(Math.round(visualSeconds));
+            grantRafId = requestAnimationFrame(grantStep);
+        }
+
+        function kickGrantAnimation() {
+            if (grantRafId) cancelAnimationFrame(grantRafId);
+            grantRafId = requestAnimationFrame(grantStep);
+        }
+
+        function getFileText(path) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', path + '?cache_bust=' + Date.now() + '_' + Math.random(), true);
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200 || xhr.status === 0) {
+                            resolve(xhr.responseText);
+                        } else {
+                            reject(xhr.status);
+                        }
+                    }
+                };
+                xhr.send();
+            });
+        }
+
+        async function isBlinking() {
+            try {
+                const text = await getFileText('blink.flag');
+                return text.trim() === '1';
+            } catch (e) {}
+            return false;
+        }
+
+        function showBlinkTime() {
+            document.getElementById('blinkTop-time').classList.add('visible');
+            document.getElementById('blinkBottom-time').classList.add('visible');
+            document.getElementById('blinkTop-hurry').classList.remove('visible');
+            document.getElementById('blinkBottom-hurry').classList.remove('visible');
+            document.getElementById('blinkTop-warning').classList.remove('visible');
+            document.getElementById('blinkBottom-warning').classList.remove('visible');
+        }
+        function showBlinkHurry() {
+            document.getElementById('blinkTop-hurry').classList.add('visible');
+            document.getElementById('blinkBottom-hurry').classList.add('visible');
+            document.getElementById('blinkTop-time').classList.remove('visible');
+            document.getElementById('blinkBottom-time').classList.remove('visible');
+            document.getElementById('blinkTop-warning').classList.remove('visible');
+            document.getElementById('blinkBottom-warning').classList.remove('visible');
+        }
+        function showBlinkWarning() {
+            document.getElementById('blinkTop-warning').classList.add('visible');
+            document.getElementById('blinkBottom-warning').classList.add('visible');
+            document.getElementById('blinkTop-hurry').classList.remove('visible');
+            document.getElementById('blinkBottom-hurry').classList.remove('visible');
+            document.getElementById('blinkTop-time').classList.remove('visible');
+            document.getElementById('blinkBottom-time').classList.remove('visible');
+        }
+        function hideAllBlinkTexts() {
+            document.getElementById('blinkTop-time').classList.remove('visible');
+            document.getElementById('blinkBottom-time').classList.remove('visible');
+            document.getElementById('blinkTop-hurry').classList.remove('visible');
+            document.getElementById('blinkBottom-hurry').classList.remove('visible');
+            document.getElementById('blinkTop-warning').classList.remove('visible');
+            document.getElementById('blinkBottom-warning').classList.remove('visible');
+        }
+
+        function createDigitSlot(char) {
+            const slot = document.createElement('span');
+            slot.className = 'flip-digit-slot';
+            const track = document.createElement('span');
+            track.className = 'flip-digit-track';
+            const span = document.createElement('span');
+            span.className = 'flip-digit-char';
+            span.textContent = char;
+            track.appendChild(span);
+            slot.appendChild(track);
+            slot._track = track;
+            slot._current = char;
+            return slot;
+        }
+
+        function setDigitImmediate(slot, ch) {
+            const track = slot._track;
+            track.style.transition = 'none';
+            track.innerHTML = '<span class="flip-digit-char">' + ch + '</span>';
+            track.style.transform = 'translateY(0)';
+            slot._current = ch;
+            void track.offsetHeight;
+            track.style.transition = '';
+        }
+
+        /** flipUp: начисление (grant) — новая цифра снизу, движение вверх; иначе обратный отсчёт — как раньше (вниз). */
+        function animateDigitFlip(slot, newChar, flipUp) {
+            const track = slot._track;
+            const oldChar = slot._current;
+            if (oldChar === newChar) return;
+            if (track._busy) {
+                track._queued = newChar;
+                track._queuedFlipUp = flipUp;
+                return;
+            }
+            track._busy = true;
+            track.style.transition = 'none';
+            track.innerHTML = '';
+            const sNew = document.createElement('span');
+            sNew.className = 'flip-digit-char';
+            sNew.textContent = newChar;
+            const sOld = document.createElement('span');
+            sOld.className = 'flip-digit-char';
+            sOld.textContent = oldChar;
+            if (flipUp) {
+                track.appendChild(sOld);
+                track.appendChild(sNew);
+                track.style.transform = 'translateY(0)';
+                void track.offsetHeight;
+                track.style.transition = DIGIT_FLIP_TRANSITION;
+                track.style.transform = 'translateY(-1em)';
+            } else {
+                track.appendChild(sNew);
+                track.appendChild(sOld);
+                track.style.transform = 'translateY(-1em)';
+                void track.offsetHeight;
+                track.style.transition = DIGIT_FLIP_TRANSITION;
+                track.style.transform = 'translateY(0)';
+            }
+            const onEnd = function(e) {
+                if (e.propertyName !== 'transform') return;
+                track.removeEventListener('transitionend', onEnd);
+                track.style.transition = 'none';
+                track.innerHTML = '<span class="flip-digit-char">' + newChar + '</span>';
+                track.style.transform = 'translateY(0)';
+                slot._current = newChar;
+                track._busy = false;
+                void track.offsetHeight;
+                track.style.transition = '';
+                if (track._queued && track._queued !== slot._current) {
+                    const q = track._queued;
+                    const qUp = track._queuedFlipUp;
+                    track._queued = null;
+                    track._queuedFlipUp = undefined;
+                    requestAnimationFrame(() => animateDigitFlip(slot, q, qUp));
+                } else {
+                    track._queued = null;
+                    track._queuedFlipUp = undefined;
+                }
+            };
+            track.addEventListener('transitionend', onEnd);
+        }
+
+        /** Сборка ряда цифр из секунд: часы могут быть 2+ символов — нельзя маппить фиксированные индексы строки HH:MM:SS. */
+        function setFlipTimerFromSeconds(totalSeconds, animate, flipDigitsUp) {
+            let sec = Math.max(0, Math.floor(Number(totalSeconds)));
+            if (!isFinite(sec)) sec = 0;
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            const hStr = String(h).padStart(2, '0');
+            const mStr = String(m).padStart(2, '0');
+            const sStr = String(s).padStart(2, '0');
+            const flat = [];
+            for (let i = 0; i < hStr.length; i++) flat.push(hStr.charAt(i));
+            flat.push(':', mStr.charAt(0), mStr.charAt(1), ':', sStr.charAt(0), sStr.charAt(1));
+            const pKey = hStr.length + '-2-2';
+            let row = container.querySelector('.flip-timer-row');
+            let localAnimate = animate;
+            if (!row || row._pKey !== pKey) {
+                if (row) row.remove();
+                container.textContent = '';
+                row = document.createElement('div');
+                row.className = 'flip-timer-row';
+                row._pKey = pKey;
+                // создаём ряд в "старом" состоянии, чтобы потом анимировать в новое
+                const hoursLen = hStr.length;
+                const prevHours = (container._lastHoursStr || '00');
+                let prevHoursAdj = prevHours;
+                if (prevHoursAdj.length < hoursLen) prevHoursAdj = prevHoursAdj.padStart(hoursLen, '0');
+                if (prevHoursAdj.length > hoursLen) prevHoursAdj = prevHoursAdj.slice(-hoursLen);
+                const prevM = (container._lastMStr || '00').padStart(2, '0').slice(-2);
+                const prevS = (container._lastSStr || '00').padStart(2, '0').slice(-2);
+                const prevFlat = [];
+                for (let i = 0; i < prevHoursAdj.length; i++) prevFlat.push(prevHoursAdj.charAt(i));
+                prevFlat.push(':', prevM.charAt(0), prevM.charAt(1), ':', prevS.charAt(0), prevS.charAt(1));
+                for (let j = 0; j < prevFlat.length; j++) {
+                    const c = prevFlat[j];
+                    if (c === ':') {
+                        const sep = document.createElement('span');
+                        sep.className = 'flip-colon';
+                        sep.textContent = ':';
+                        row.appendChild(sep);
+                    } else {
+                        row.appendChild(createDigitSlot(c));
+                    }
+                }
+                container.appendChild(row);
+            }
+            row = container.querySelector('.flip-timer-row');
+            const digitSlots = [];
+            for (let ci = 0; ci < row.children.length; ci++) {
+                const node = row.children[ci];
+                if (node.classList && node.classList.contains('flip-colon')) continue;
+                digitSlots.push(node);
+            }
+            const digitChars = flat.filter(function(c) { return c !== ':'; });
+            const apply = () => {
+                for (let i = 0; i < digitSlots.length; i++) {
+                    const ch = digitChars[i];
+                    if (ch === undefined) continue;
+                    const slot = digitSlots[i];
+                    if (!slot || slot._current === ch) continue;
+                    if (localAnimate) animateDigitFlip(slot, ch, !!flipDigitsUp);
+                    else setDigitImmediate(slot, ch);
+                }
+            };
+            if (localAnimate) requestAnimationFrame(apply);
+            else apply();
+            container._lastHoursStr = hStr;
+            container._lastMStr = mStr;
+            container._lastSStr = sStr;
+        }
+
+        function updateDisplay(seconds) {
+            if (seconds < 0) seconds = 0;
+            if (typeof seconds !== 'number' || !isFinite(seconds)) seconds = 0;
+            const animate = timerDigitsInitialized;
+            setFlipTimerFromSeconds(seconds, animate, grantState != null);
+            timerDigitsInitialized = true;
+            let color, textShadow, animation, className, glowClass;
+            if (seconds > 7200) {
+                color = '#fff';
+                textShadow = '0 0 16px #111, 0 0 4px #000';
+                animation = '';
+                className = 'normal';
+                glowClass = 'timer-glow-white';
+            } else if (seconds > 3600) {
+                color = '#C8FF2E';
+                textShadow = '0 0 16px #C8FF2E, 0 0 4px #000';
+                animation = '';
+                className = '';
+                glowClass = 'timer-glow-lime';
+            } else if (seconds > 1800) {
+                color = '#F2DC38';
+                textShadow = '0 0 16px #F2DC38, 0 0 4px #000';
+                animation = '';
+                className = '';
+                glowClass = 'timer-glow-yellow';
+            } else if (seconds > 600) {
+                color = '#ffaa00';
+                textShadow = '0 0 10px #ffaa00';
+                animation = 'orangePulse 0.8s ease-in-out infinite';
+                className = 'warning';
+                glowClass = 'timer-glow-orange';
+            } else if (seconds > 300) {
+                color = '#ff3b3b';
+                textShadow = '0 0 10px #ff3b3b';
+                animation = 'dangerPulse 0.8s ease-in-out infinite';
+                className = 'danger';
+                glowClass = 'timer-glow-red';
+            } else {
+                color = '#E20000';
+                textShadow = '0 0 30px #E20000, 0 0 10px #E20000';
+                animation = '';
+                className = 'danger';
+                glowClass = 'timer-glow-redcrit';
+            }
+            container.style.color = color;
+            const row = container.querySelector('.flip-timer-row');
+            if (row) {
+                container.style.textShadow = 'none';
+                container.style.animation = 'none';
+                row.className = 'flip-timer-row ' + glowClass;
+            } else {
+                container.style.textShadow = textShadow;
+                container.style.animation = animation;
+            }
+            container.className = className;
+        }
+
+        function showAddedTime(text, duration = 2000) {
+            const addedTime = document.getElementById('addedTime');
+            addedTime.textContent = text;
+            addedTime.style.opacity = 1;
+            addedTime.style.transform = 'translate(-50%, -60%) scale(1.2)';
+            
+            setTimeout(() => {
+                addedTime.style.opacity = 0;
+                addedTime.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, duration);
+        }
+
+        async function syncRate() {
+            try {
+                const text = await getFileText('rate.txt');
+                const el = document.getElementById('rateInfo');
+                el.textContent = text.trim();
+                el.style.display = 'block';
+            } catch (e) {
+                const el = document.getElementById('rateInfo');
+                el.textContent = '';
+                el.style.display = 'block';
+            }
+        }
+
+        async function syncTitle() {
+            try {
+                const text = await getFileText('title.txt');
+                const el = document.getElementById('titleInfo');
+                if (text.trim() === '') {
+                    el.style.display = 'none';
+                } else {
+                    el.textContent = text.trim();
+                    el.style.display = 'block';
+                }
+            } catch (e) {
+                document.getElementById('titleInfo').style.display = 'none';
+            }
+        }
+
+        async function syncTimer() {
+            if (isSyncing) return;
+            isSyncing = true;
+            if (await isBlinking()) {
+                stopGrantAnimation();
+                resetGrantDeferralAndBumpTimer();
+                lastServerSeconds = null;
+                visualSeconds = 0;
+                timerDigitsInitialized = false;
+                updateDisplay(0);
+                container.classList.add('fadeIn');
+                showBlinkTime();
+                isSyncing = false;
+                await syncRate();
+                await syncTitle();
+                return;
+            }
+            try {
+                const text = await getFileText('timer.txt');
+                if (text.trim() === '') {
+                    stopGrantAnimation();
+                    resetGrantDeferralAndBumpTimer();
+                    lastServerSeconds = null;
+                    isSyncing = false;
+                    await syncRate();
+                    await syncTitle();
+                    return;
+                }
+                const parts = text.trim().split(':');
+                if (parts.length === 3) {
+                    const h = parseInt(parts[0], 10);
+                    const m = parseInt(parts[1], 10);
+                    const s = parseInt(parts[2], 10);
+                    if (!isNaN(h) && !isNaN(m) && !isNaN(s)) {
+                        const newSeconds = h * 3600 + m * 60 + s;
+                        const prev = lastServerSeconds;
+                        if (prev === null) {
+                            stopGrantAnimation();
+                            resetGrantDeferralAndBumpTimer();
+                            visualSeconds = newSeconds;
+                            lastServerSeconds = newSeconds;
+                            updateDisplay(newSeconds);
+                        } else {
+                            const delta = newSeconds - prev;
+                            lastServerSeconds = newSeconds;
+                            if (grantState) {
+                                if (grantState.chainReveal && pendingGrantDeltaQueue.length > 0) {
+                                    const h = pendingGrantDeltaQueue[0];
+                                    grantState.to = newSeconds - (pendingHiddenGrantSum() - h);
+                                } else {
+                                    grantState.to = newSeconds;
+                                }
+                            }
+
+                            if (delta > 0) {
+                                const cur = Math.round(visualSeconds != null ? visualSeconds : prev);
+                                if (newSeconds > cur) {
+                                    if (donationGrantBarrierCount > 0 || donationAlertActive || donationAlertQueue.length > 0) {
+                                        pendingGrantDeltaQueue.push(delta);
+                                        const inChain = grantState && grantState.chainReveal;
+                                        if (!inChain) {
+                                            stopGrantAnimation();
+                                            if (grantBumpDecisionTimer) {
+                                                clearTimeout(grantBumpDecisionTimer);
+                                                grantBumpDecisionTimer = null;
+                                            }
+                                            pendingGrantBump = null;
+                                            visualSeconds = lastServerSeconds - pendingHiddenGrantSum();
+                                            updateDisplay(Math.round(visualSeconds));
+                                        }
+                                    } else {
+                                        pendingGrantBump = { prevServer: prev, at: performance.now() };
+                                        if (grantBumpDecisionTimer) clearTimeout(grantBumpDecisionTimer);
+                                        grantBumpDecisionTimer = setTimeout(function() {
+                                            grantBumpDecisionTimer = null;
+                                            if (pendingHiddenGrantSum() > 0) return;
+                                            if (donationGrantBarrierCount > 0 || donationAlertActive || donationAlertQueue.length > 0) return;
+                                            const from = Math.round(visualSeconds != null ? visualSeconds : lastServerSeconds);
+                                            const to = lastServerSeconds;
+                                            if (to > from) {
+                                                grantState = {
+                                                    from0: from,
+                                                    to: to,
+                                                    startT: performance.now(),
+                                                    durationMs: grantDurationMs(to - from)
+                                                };
+                                                visualSeconds = from;
+                                                kickGrantAnimation();
+                                            }
+                                            pendingGrantBump = null;
+                                        }, MANUAL_GRANT_WAIT_MS);
+                                    }
+                                }
+                            } else if (delta < -1) {
+                                resetGrantDeferralAndBumpTimer();
+                                stopGrantAnimation();
+                                visualSeconds = newSeconds;
+                                updateDisplay(newSeconds);
+                            } else {
+                                if (pendingGrantDeltaQueue.length > 0) {
+                                    const inChain = grantState && grantState.chainReveal;
+                                    if (!inChain) {
+                                        visualSeconds = lastServerSeconds - pendingHiddenGrantSum();
+                                        updateDisplay(Math.round(visualSeconds));
+                                    }
+                                } else if (grantState) {
+                                    if (!grantRafId) kickGrantAnimation();
+                                } else {
+                                    visualSeconds = newSeconds;
+                                    updateDisplay(newSeconds);
+                                }
+                            }
+                        }
+                        if (newSeconds <= 300 && newSeconds > 0) {
+                            showBlinkWarning();
+                        } else if (newSeconds <= 900 && newSeconds > 0) {
+                            showBlinkHurry();
+                        } else {
+                            hideAllBlinkTexts();
+                        }
+                    }
+                }
+            } catch (e) {}
+            await syncRate();
+            await syncTitle();
+            isSyncing = false;
+        }
+
+        setInterval(syncTimer, 1000);
+
+        let lastDonationAlertId = null;
+        let donationAlertEpoch = 0;
+        const donationAlert = document.getElementById('donationAlert');
+        const donationAlertNick = document.getElementById('donationAlertNick');
+        const donationAlertTime = document.getElementById('donationAlertTime');
+        let donationAlertQueue = [];
+        let donationAlertActive = false;
+
+        function dismissDonationAlerts() {
+            donationAlertEpoch++;
+            donationAlertQueue = [];
+            donationAlertActive = false;
+            donationGrantBarrierCount = 0;
+            lastDonationAlertId = null;
+            if (donationAlert) {
+                donationAlert.style.transition = 'none';
+                donationAlert.style.opacity = '0';
+            }
+            if (donationAlertNick) donationAlertNick.textContent = '';
+            if (donationAlertTime) donationAlertTime.textContent = '';
+        }
+
+        async function pollDonationAlertFile() {
+            try {
+                const text = await getFileText('donation_alert.txt');
+                const trimmed = text.trim();
+                if (trimmed === '__CLEAR__') {
+                    dismissDonationAlerts();
+                    fetch('donation_alert.txt', {method: 'PUT', body: ''});
+                } else if (trimmed !== '') {
+                    const parts = trimmed.split('|');
+                    if (parts.length >= 4) {
+                        const alertId = parts[2];
+                        const color = parts[3];
+                        if (alertId !== lastDonationAlertId) {
+                            showDonationAlert(parts[0], parts[1], color);
+                            lastDonationAlertId = alertId;
+                        }
+                    } else if (parts.length >= 3) {
+                        const alertId = parts[2];
+                        if (alertId !== lastDonationAlertId) {
+                            showDonationAlert(parts[0], parts[1], 'black');
+                            lastDonationAlertId = alertId;
+                        }
+                    } else if (parts.length === 2) {
+                        showDonationAlert(parts[0], parts[1], 'black');
+                    }
+                    fetch('donation_alert.txt', {method: 'PUT', body: ''});
+                }
+            } catch (e) {}
+            setTimeout(pollDonationAlertFile, 1000);
+        }
+        pollDonationAlertFile();
+
+        function showDonationAlert(nick, timeText, color = 'black') {
+            if (pendingGrantBump && (performance.now() - pendingGrantBump.at) < 3000) {
+                if (grantBumpDecisionTimer) {
+                    clearTimeout(grantBumpDecisionTimer);
+                    grantBumpDecisionTimer = null;
+                }
+                const bumpDelta = lastServerSeconds != null ? lastServerSeconds - pendingGrantBump.prevServer : 0;
+                if (bumpDelta > 0) {
+                    pendingGrantDeltaQueue.push(bumpDelta);
+                    if (lastServerSeconds != null && !(grantState && grantState.chainReveal)) {
+                        visualSeconds = lastServerSeconds - pendingHiddenGrantSum();
+                        updateDisplay(Math.round(visualSeconds));
+                    }
+                }
+                pendingGrantBump = null;
+            }
+            donationAlertQueue.push({nick, timeText, color});
+            if (!donationAlertActive) {
+                processDonationAlertQueue();
+            }
+        }
+
+        function setDonationAlertColor(color) {
+            const donationAlert = document.getElementById('donationAlert');
+            const colorMap = {
+                'black': '#000000',
+                'blue': '#00A8E6',
+                'purple': '#8C00BF',
+                'green': '#00BF06',
+                'red': '#CB0000'
+            };
+            const backgroundColor = colorMap[color] || colorMap['black'];
+            donationAlert.style.backgroundColor = backgroundColor;
+        }
+
+        function processDonationAlertQueue() {
+            if (donationAlertQueue.length === 0) {
+                donationAlertActive = false;
+                if (!grantState && pendingHiddenGrantSum() > 0 && donationGrantBarrierCount === 0) {
+                    beginGrantRevealForLastClosedAlert();
+                }
+                return;
+            }
+            const epoch = donationAlertEpoch;
+            donationAlertActive = true;
+            donationGrantBarrierCount++;
+            const {nick, timeText, color} = donationAlertQueue.shift();
+            donationAlertNick.textContent = nick;
+            donationAlertTime.textContent = timeText;
+            
+            setDonationAlertColor(color);
+            
+            const timer = document.getElementById('container');
+            const timerRect = timer.getBoundingClientRect();
+            donationAlert.style.maxWidth = timerRect.width + 'px';
+            
+            let fontSize = 2.0;
+            donationAlertNick.style.fontSize = fontSize + 'rem';
+            donationAlertNick.style.whiteSpace = 'nowrap';
+            donationAlertNick.style.overflow = 'hidden';
+            donationAlertNick.style.textOverflow = 'ellipsis';
+            
+            setTimeout(() => {
+                if (epoch !== donationAlertEpoch) return;
+                while (donationAlertNick.scrollWidth > timerRect.width - 6 && fontSize > 0.8) {
+                    fontSize -= 0.05;
+                    donationAlertNick.style.fontSize = fontSize + 'rem';
+                }
+            }, 10);
+            
+            donationAlert.style.transition = 'none';
+            donationAlert.style.opacity = '1';
+            donationAlert.style.transform = 'translate(-50%,-50%) scale(0.01)';
+            
+            setTimeout(() => {
+                if (epoch !== donationAlertEpoch) return;
+                donationAlert.style.transform = 'translate(-50%,-50%) scale(1.3)';
+                setTimeout(() => {
+                    if (epoch !== donationAlertEpoch) return;
+                    donationAlert.style.transform = 'translate(-50%,-50%) scale(0.9)';
+                    setTimeout(() => {
+                        if (epoch !== donationAlertEpoch) return;
+                        donationAlert.style.transform = 'translate(-50%,-50%) scale(1.1)';
+                        setTimeout(() => {
+                            if (epoch !== donationAlertEpoch) return;
+                            donationAlert.style.transform = 'translate(-50%,-50%) scale(1)';
+                        }, 100);
+                    }, 100);
+                }, 100);
+            }, 50);
+            
+            setTimeout(() => {
+                if (epoch !== donationAlertEpoch) return;
+                donationAlert.style.transition = 'opacity 2s, transform 2s';
+                donationAlert.style.opacity = '0';
+                donationAlert.style.transform = 'translate(-50%,-50%) scale(0.95)';
+                setTimeout(() => {
+                    if (epoch !== donationAlertEpoch) return;
+                    donationGrantBarrierCount--;
+                    donationAlertActive = false;
+                    beginGrantRevealForLastClosedAlert();
+                }, DONATION_ALERT_FADE_MS);
+            }, DONATION_ALERT_VISIBLE_MS);
+        }
+    </script>
+</body>
+</html>

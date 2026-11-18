@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru" data-accent="orange">
+<head>
+<script src="bridge.js"></script>
+  <meta charset="UTF-8" />
+  <title>Донат-гол</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <style>
+    :root {
+      --bg: rgba(0, 0, 0, 0.55);
+      --gold: #f6b34a;
+      --gold2: #ffcf7a;
+      --gold-rgb: 246, 179, 74;
+      --gold2-rgb: 255, 207, 122;
+      --stroke: rgba(var(--gold2-rgb), 0.18);
+      --text: #f3f3f3;
+      --track-opacity: 0.72;
+      --fill-opacity: 1;
+    }
+    html[data-accent="purple"] { --gold:#c084fc; --gold2:#e9d5ff; --gold-rgb:192,132,252; --gold2-rgb:233,213,255; }
+    html[data-accent="green"] { --gold:#4ade80; --gold2:#bbf7d0; --gold-rgb:74,222,128; --gold2-rgb:187,247,208; }
+    html[data-accent="blue"] { --gold:#38bdf8; --gold2:#bae6fd; --gold-rgb:56,189,248; --gold2-rgb:186,230,253; }
+    html[data-accent="red"] { --gold:#FF3232; --gold2:#FFB3B3; --gold-rgb:255,50,50; --gold2-rgb:255,179,179; }
+    html[data-accent="pink"] { --gold:#FF5F87; --gold2:#FFB0C8; --gold-rgb:255,95,135; --gold2-rgb:255,176,200; }
+    html[data-accent="yellow"] { --gold:#FFE600; --gold2:#FFF566; --gold-rgb:255,230,0; --gold2-rgb:255,245,102; }
+    html[data-accent="lime"] { --gold:#CDFF5F; --gold2:#E8FFA5; --gold-rgb:205,255,95; --gold2-rgb:232,255,165; }
+    html[data-accent="navy"] { --gold:#5F65FF; --gold2:#B8BBFF; --gold-rgb:95,101,255; --gold2-rgb:184,187,255; }
+    html[data-accent="gray"] { --gold:#484848; --gold2:#A8A8A8; --gold-rgb:72,72,72; --gold2-rgb:168,168,168; }
+    html, body {
+      margin: 0;
+      padding: 4px;
+      background: transparent;
+      font-family: "Segoe UI", Arial, sans-serif;
+      user-select: none;
+      overflow: visible;
+    }
+    body {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    #wrap {
+      width: 100%;
+      max-width: 520px;
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+      max-height: 0;
+      overflow: hidden;
+      transition: opacity 0.65s ease, transform 0.65s ease, max-height 0.65s ease;
+      pointer-events: none;
+    }
+    #wrap.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      max-height: 120px;
+      pointer-events: auto;
+      overflow: visible;
+    }
+    .title-wrap {
+      padding: 0 4px 8px;
+      overflow: visible;
+    }
+    #goalTitle {
+      text-align: center;
+      color: var(--gold2);
+      font-weight: 500;
+      font-size: 1.2rem;
+      font-family: "Segoe UI", "Segoe UI Emoji", "Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", Arial, sans-serif;
+      letter-spacing: 0.03em;
+      line-height: 1.25;
+      white-space: normal;
+      word-break: break-word;
+      transform: translateY(3px);
+    }
+    .progress-wrap {
+      padding: 0 2px;
+    }
+    .bar {
+      position: relative;
+      height: 22px;
+      border-radius: 2px;
+      background: rgba(0, 0, 0, calc(0.55 * var(--track-opacity)));
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(
+        180deg,
+        rgba(var(--gold2-rgb), calc(0.95 * var(--fill-opacity))),
+        rgba(var(--gold-rgb), calc(0.88 * var(--fill-opacity)))
+      );
+      box-shadow: 0 0 16px rgba(var(--gold-rgb), calc(0.38 * var(--fill-opacity)));
+      transition: width 0.85s ease, background 1.05s ease, box-shadow 1.05s ease;
+    }
+    #wrap.phase-green #goalTitle { color: #C8FF2E; }
+    #wrap.phase-yellow #goalTitle { color: #F2DC38; }
+    #wrap.warning #goalTitle { color: #ffaa00; }
+    #wrap.danger #goalTitle { color: #ff3b3b; }
+    #wrap.danger-critical #goalTitle { color: #E20000; }
+    #wrap.phase-green .fill {
+      background: linear-gradient(
+        180deg,
+        rgba(234, 255, 153, calc(0.95 * var(--fill-opacity))),
+        rgba(168, 224, 32, calc(0.88 * var(--fill-opacity)))
+      );
+      box-shadow: 0 0 16px rgba(200, 255, 46, calc(0.38 * var(--fill-opacity)));
+    }
+    #wrap.phase-yellow .fill {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 244, 184, calc(0.95 * var(--fill-opacity))),
+        rgba(230, 200, 46, calc(0.88 * var(--fill-opacity)))
+      );
+      box-shadow: 0 0 16px rgba(242, 220, 56, calc(0.38 * var(--fill-opacity)));
+    }
+    #wrap.warning .fill {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 208, 128, calc(0.95 * var(--fill-opacity))),
+        rgba(255, 149, 0, calc(0.88 * var(--fill-opacity)))
+      );
+      box-shadow: 0 0 16px rgba(255, 170, 0, calc(0.38 * var(--fill-opacity)));
+    }
+    #wrap.danger .fill {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 179, 179, calc(0.95 * var(--fill-opacity))),
+        rgba(255, 69, 69, calc(0.88 * var(--fill-opacity)))
+      );
+      box-shadow: 0 0 16px rgba(255, 59, 59, calc(0.38 * var(--fill-opacity)));
+    }
+    #wrap.danger-critical .fill {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 133, 133, calc(0.95 * var(--fill-opacity))),
+        rgba(200, 0, 0, calc(0.88 * var(--fill-opacity)))
+      );
+      box-shadow: 0 0 16px rgba(226, 0, 0, calc(0.42 * var(--fill-opacity)));
+    }
+    .label {
+      position: relative;
+      z-index: 2;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(-1px);
+      color: var(--text);
+      font-weight: 400;
+      font-size: 0.9rem;
+      letter-spacing: 0.02em;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.55);
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap" class="phase-calm">
+    <div class="title-wrap">
+      <div id="goalTitle">Донат-гол</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="bar">
+        <div class="fill" id="fill"></div>
+        <div class="label" id="label">0 / 0 RUB</div>
+      </div>
+    </div>
+  </div>
+  <script src="marathon_accent_transition.js"></script>
+  <script>
+    function getFileText(path) {
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path + '?t=' + Date.now(), true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200 || xhr.status === 0) resolve(xhr.responseText);
+            else reject(xhr.status);
+          }
+        };
+        xhr.send();
+      });
+    }
+    MarathonAccent.start(900);
+
+    var GOAL_PHASES = ['phase-calm', 'phase-green', 'phase-yellow', 'warning', 'danger', 'danger-critical'];
+
+    function setGoalPhase(phaseClass) {
+      var wrap = document.getElementById('wrap');
+      if (!wrap) return;
+      for (var i = 0; i < GOAL_PHASES.length; i++) {
+        if (GOAL_PHASES[i] === phaseClass) wrap.classList.add(GOAL_PHASES[i]);
+        else wrap.classList.remove(GOAL_PHASES[i]);
+      }
+    }
+
+    async function tickPhase() {
+      try {
+        var blinkOn = false;
+        try {
+          blinkOn = (await getFileText('blink.flag')).trim() === '1';
+        } catch (e1) {}
+        var sec = null;
+        if (!blinkOn) {
+          try {
+            var ttxt = (await getFileText('timer.txt')).trim();
+            if (ttxt) {
+              var pp = ttxt.split(':');
+              if (pp.length === 3) {
+                var H = parseInt(pp[0], 10);
+                var M = parseInt(pp[1], 10);
+                var S = parseInt(pp[2], 10);
+                if (!isNaN(H) && !isNaN(M) && !isNaN(S)) sec = H * 3600 + M * 60 + S;
+              }
+            }
+          } catch (e2) {}
+        }
+        var phaseClass = 'phase-calm';
+        if (blinkOn || (sec !== null && sec <= 0)) phaseClass = 'danger-critical';
+        else if (sec !== null) {
+          if (sec > 7200) phaseClass = 'phase-calm';
+          else if (sec > 3600) phaseClass = 'phase-green';
+          else if (sec > 1800) phaseClass = 'phase-yellow';
+          else if (sec > 600) phaseClass = 'warning';
+          else if (sec > 300) phaseClass = 'danger';
+          else phaseClass = 'danger-critical';
+        }
+        setGoalPhase(phaseClass);
+      } catch (e) {}
+    }
+
+    tickPhase();
+    setInterval(tickPhase, 1000);
+
+    function clamp01(v) {
+      v = Number(v);
+      if (!isFinite(v)) return 1;
+      return Math.max(0, Math.min(1, v));
+    }
+
+    function fmtRub(n) {
+      var v = Math.max(0, Number(n) || 0);
+      if (Math.abs(v - Math.round(v)) < 1e-9) {
+        return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      }
+      var parts = v.toFixed(2).split('.');
+      return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + '.' + parts[1];
+    }
+
+    async function syncGoal() {
+      try {
+        var raw = await getFileText('donation_goal.json');
+        var data = JSON.parse(raw);
+        var enabled = !!data.enabled;
+        var wrap = document.getElementById('wrap');
+        if (enabled) wrap.classList.add('visible');
+        else wrap.classList.remove('visible');
+
+        var trackOp = clamp01((Number(data.track_opacity_percent) || 72) / 100);
+        var fillOp = clamp01((Number(data.fill_opacity_percent) || 100) / 100);
+        document.documentElement.style.setProperty('--track-opacity', String(trackOp));
+        document.documentElement.style.setProperty('--fill-opacity', String(fillOp));
+
+        var title = String(data.title || '').trim() || 'Донат-гол';
+        var goal = Math.max(0, Number(data.goal_rub) || 0);
+        var current = Math.max(0, Number(data.current_rub) || 0);
+        var pct = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
+
+        document.getElementById('goalTitle').textContent = title;
+        document.getElementById('fill').style.width = pct + '%';
+        document.getElementById('label').textContent = fmtRub(current) + ' / ' + fmtRub(goal) + ' ' + (window.DT_CURRENCY || 'RUB') + ' (' + Math.round(pct) + '%)';
+      } catch (e) {}
+    }
+    syncGoal();
+    setInterval(syncGoal, 800);
+  </script>
+</body>
+</html>

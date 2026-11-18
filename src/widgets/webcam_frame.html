@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru" data-accent="orange">
+<head>
+<script src="bridge.js"></script>
+  <meta charset="UTF-8" />
+  <title>Рамка вебки</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <style>
+    :root {
+      --accent: #f6b34a;
+      --accent-dark: #7b5925;
+      --frame-w: 962px;
+      --frame-h: 544px;
+      --frame-border: 14px;
+      --frame-left: 20px;
+      --frame-top: 356px;
+      --frame-gradient: linear-gradient(to bottom right, var(--accent), var(--accent-dark));
+      --frame-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+    body {
+      position: relative;
+      box-sizing: border-box;
+    }
+    .webcam-frame {
+      position: absolute;
+      left: var(--frame-left);
+      top: var(--frame-top);
+      width: var(--frame-w);
+      height: var(--frame-h);
+      box-sizing: border-box;
+      padding: var(--frame-border);
+      background: var(--frame-gradient);
+      -webkit-mask: var(--frame-mask);
+      mask: var(--frame-mask);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .webcam-frame::before {
+      content: '';
+      position: absolute;
+      inset: -12px;
+      padding: calc(var(--frame-border) + 12px);
+      box-sizing: border-box;
+      background: var(--frame-gradient);
+      -webkit-mask: var(--frame-mask);
+      mask: var(--frame-mask);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      filter: blur(16px);
+      opacity: 0.38;
+      pointer-events: none;
+    }
+    .webcam-frame.phase-green,
+    .webcam-frame.phase-green::before {
+      --accent: #C8FF2E;
+      --accent-dark: #3d5a10;
+      --frame-gradient: linear-gradient(to bottom right, var(--accent), var(--accent-dark));
+      background: var(--frame-gradient);
+    }
+    .webcam-frame.phase-yellow,
+    .webcam-frame.phase-yellow::before {
+      --accent: #F2DC38;
+      --accent-dark: #6b5e10;
+      --frame-gradient: linear-gradient(to bottom right, var(--accent), var(--accent-dark));
+      background: var(--frame-gradient);
+    }
+    .webcam-frame.warning,
+    .webcam-frame.warning::before {
+      --accent: #ffaa00;
+      --accent-dark: #7a4e00;
+      --frame-gradient: linear-gradient(to bottom right, var(--accent), var(--accent-dark));
+      background: var(--frame-gradient);
+    }
+    .webcam-frame.danger,
+    .webcam-frame.danger::before {
+      --accent: #ff3b3b;
+      --accent-dark: #7a1515;
+      --frame-gradient: linear-gradient(to bottom right, var(--accent), var(--accent-dark));
+      background: var(--frame-gradient);
+    }
+    .webcam-frame.danger-critical,
+    .webcam-frame.danger-critical::before {
+      --accent: #E20000;
+      --accent-dark: #5c0000;
+      --frame-gradient: linear-gradient(to bottom right, var(--accent), var(--accent-dark));
+      background: var(--frame-gradient);
+    }
+  </style>
+</head>
+<body>
+  <div class="webcam-frame phase-calm" aria-hidden="true"></div>
+  <script src="marathon_accent_transition.js"></script>
+  <script>
+    MarathonAccent.start(900);
+
+    var FRAME_PHASES = ['phase-calm', 'phase-green', 'phase-yellow', 'warning', 'danger', 'danger-critical'];
+
+    function getFileText(path) {
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', path + '?t=' + Date.now(), true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200 || xhr.status === 0) resolve(xhr.responseText);
+            else reject(xhr.status);
+          }
+        };
+        xhr.send();
+      });
+    }
+
+    function setFramePhase(phaseClass) {
+      var frame = document.querySelector('.webcam-frame');
+      if (!frame) return;
+      for (var i = 0; i < FRAME_PHASES.length; i++) {
+        if (FRAME_PHASES[i] === phaseClass) frame.classList.add(FRAME_PHASES[i]);
+        else frame.classList.remove(FRAME_PHASES[i]);
+      }
+    }
+
+    async function tickPhase() {
+      try {
+        var blinkOn = false;
+        try {
+          blinkOn = (await getFileText('blink.flag')).trim() === '1';
+        } catch (e1) {}
+        var sec = null;
+        if (!blinkOn) {
+          try {
+            var ttxt = (await getFileText('timer.txt')).trim();
+            if (ttxt) {
+              var pp = ttxt.split(':');
+              if (pp.length === 3) {
+                var H = parseInt(pp[0], 10);
+                var M = parseInt(pp[1], 10);
+                var S = parseInt(pp[2], 10);
+                if (!isNaN(H) && !isNaN(M) && !isNaN(S)) sec = H * 3600 + M * 60 + S;
+              }
+            }
+          } catch (e2) {}
+        }
+        var phaseClass = 'phase-calm';
+        if (blinkOn || (sec !== null && sec <= 0)) phaseClass = 'danger-critical';
+        else if (sec !== null) {
+          if (sec > 7200) phaseClass = 'phase-calm';
+          else if (sec > 3600) phaseClass = 'phase-green';
+          else if (sec > 1800) phaseClass = 'phase-yellow';
+          else if (sec > 600) phaseClass = 'warning';
+          else if (sec > 300) phaseClass = 'danger';
+          else phaseClass = 'danger-critical';
+        }
+        setFramePhase(phaseClass);
+      } catch (e) {}
+    }
+
+    tickPhase();
+    setInterval(tickPhase, 1000);
+  </script>
+</body>
+</html>

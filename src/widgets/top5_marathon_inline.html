@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru" data-accent="orange">
+<head>
+<script src="bridge.js"></script>
+  <meta charset="UTF-8" />
+  <title>Top6 Marathon Inline</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    :root{
+      --bg: rgba(0,0,0,0.55);
+      --gold:#f6b34a;
+      --gold2:#ffcf7a;
+      --gold-rgb:246,179,74;
+      --gold2-rgb:255,207,122;
+      --stroke: rgba(var(--gold2-rgb), 0.18);
+      --text:#f3f3f3;
+      --muted: rgba(243,243,243,0.78);
+      --silver: rgba(200, 210, 220, 0.95);
+      --bronze: rgba(205, 150, 110, 0.95);
+    }
+    html[data-accent="purple"]{
+      --gold:#c084fc;
+      --gold2:#e9d5ff;
+      --gold-rgb:192,132,252;
+      --gold2-rgb:233,213,255;
+    }
+    html[data-accent="green"]{
+      --gold:#4ade80;
+      --gold2:#bbf7d0;
+      --gold-rgb:74,222,128;
+      --gold2-rgb:187,247,208;
+    }
+    html[data-accent="blue"]{
+      --gold:#38bdf8;
+      --gold2:#bae6fd;
+      --gold-rgb:56,189,248;
+      --gold2-rgb:186,230,253;
+    }
+    html[data-accent="red"]{
+      --gold:#FF3232;
+      --gold2:#FFB3B3;
+      --gold-rgb:255,50,50;
+      --gold2-rgb:255,179,179;
+    }
+    html[data-accent="pink"]{
+      --gold:#FF5F87;
+      --gold2:#FFB0C8;
+      --gold-rgb:255,95,135;
+      --gold2-rgb:255,176,200;
+    }
+    html[data-accent="yellow"]{
+      --gold:#FFE600;
+      --gold2:#FFF566;
+      --gold-rgb:255,230,0;
+      --gold2-rgb:255,245,102;
+    }
+    html[data-accent="lime"]{
+      --gold:#CDFF5F;
+      --gold2:#E8FFA5;
+      --gold-rgb:205,255,95;
+      --gold2-rgb:232,255,165;
+    }
+    html[data-accent="navy"]{
+      --gold:#5F65FF;
+      --gold2:#B8BBFF;
+      --gold-rgb:95,101,255;
+      --gold2-rgb:184,187,255;
+    }
+    html[data-accent="gray"]{
+      --gold:#484848;
+      --gold2:#A8A8A8;
+      --gold-rgb:72,72,72;
+      --gold2-rgb:168,168,168;
+    }
+    /* На серой акцентной плашке «Top 6» — белый текст вместо тёмного */
+    html[data-accent="gray"] .bar.phase-calm .tag{
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    html, body{
+      margin:0; padding:0;
+      width:100%;
+      min-height:100%;
+      background: transparent;
+      overflow: visible;
+      font-family: "Segoe UI", Arial, sans-serif;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    body { padding: 4px; box-sizing: border-box; }
+    .bar{
+      width: fit-content;
+      max-width: none;
+      min-height: 52px;
+      box-sizing: border-box;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      display:inline-flex;
+      align-items:center;
+      gap: 12px;
+      transition: background 0.55s ease, border-color 0.55s ease, box-shadow 0.55s ease;
+    }
+    .bar.phase-calm {
+      transition: background 1.05s ease, border-color 1.05s ease, box-shadow 1.05s ease;
+      background:
+        radial-gradient(520px 120px at 85% 20%, rgba(var(--gold-rgb),0.2), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,0.62), var(--bg));
+      border-color: var(--stroke);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .bar.phase-green {
+      transition: background 1.05s ease, border-color 1.05s ease, box-shadow 1.05s ease;
+      background:
+        radial-gradient(520px 120px at 85% 20%, rgba(200,255,46,0.22), transparent 58%),
+        linear-gradient(180deg, rgba(18,28,10,0.74), rgba(0,0,0,0.58));
+      border-color: rgba(200, 255, 46, 0.36);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 22px rgba(200,255,46,0.12);
+    }
+    .bar.phase-yellow {
+      background:
+        radial-gradient(520px 120px at 85% 20%, rgba(242,220,56,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(28,26,8,0.74), rgba(0,0,0,0.58));
+      border-color: rgba(242, 220, 56, 0.38);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 24px rgba(242,220,56,0.12);
+    }
+    .bar.warning {
+      background:
+        radial-gradient(520px 120px at 85% 20%, rgba(255,170,0,0.28), transparent 58%),
+        linear-gradient(180deg, rgba(38,22,0,0.76), rgba(0,0,0,0.58));
+      border-color: rgba(255, 170, 0, 0.42);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 26px rgba(255,170,0,0.14);
+    }
+    .bar.danger {
+      background:
+        radial-gradient(520px 120px at 85% 20%, rgba(255,59,59,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(42,10,10,0.78), rgba(0,0,0,0.58));
+      border-color: rgba(255, 90, 90, 0.48);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.28), 0 0 28px rgba(255,59,59,0.16);
+    }
+    .bar.danger-critical {
+      background:
+        radial-gradient(520px 120px at 82% 18%, rgba(226,0,0,0.34), transparent 55%),
+        linear-gradient(180deg, rgba(48,4,4,0.82), rgba(0,0,0,0.62));
+      border-color: rgba(226, 0, 0, 0.55);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.32), 0 0 32px rgba(226,0,0,0.22);
+    }
+    .tag{
+      flex: 0 0 auto;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(14, 16, 22, 0.94);
+      background: linear-gradient(180deg, var(--gold2), var(--gold));
+      padding: 6px 10px;
+      border-radius: 999px;
+      box-shadow: 0 4px 14px rgba(var(--gold-rgb),0.38);
+      font-size: 12px;
+      white-space: nowrap;
+      transition: background 0.55s ease, box-shadow 0.55s ease, color 0.55s ease;
+    }
+    /* По умолчанию (phase-calm) — акцентная плашка; остальные фазы — как у таймера */
+    .bar.phase-calm .tag{
+      background: linear-gradient(180deg, var(--gold2), var(--gold));
+      box-shadow: 0 4px 14px rgba(var(--gold-rgb),0.38);
+      color: rgba(14, 16, 22, 0.94);
+    }
+    .bar.phase-yellow .tag{
+      background: linear-gradient(180deg, #fff4b8, #e6c82e);
+      box-shadow: 0 4px 14px rgba(230,200,46,0.42);
+      color: #1a1708;
+    }
+    .bar.phase-green .tag{
+      background: linear-gradient(180deg, #eaff99, #a8e020);
+      box-shadow: 0 4px 14px rgba(200,255,46,0.42);
+      color: #142208;
+    }
+    .bar.warning .tag{
+      background: linear-gradient(180deg, #ffd080, #ff9500);
+      box-shadow: 0 4px 14px rgba(255,149,0,0.45);
+      color: #1a0f00;
+    }
+    .bar.danger .tag{
+      background: linear-gradient(180deg, #ffb3b3, #ff4545);
+      box-shadow: 0 4px 14px rgba(255,69,69,0.42);
+      color: #1a0303;
+    }
+    .bar.danger-critical .tag{
+      background: linear-gradient(180deg, #ff8585, #c80000);
+      box-shadow: 0 4px 16px rgba(200,0,0,0.48);
+      color: #fffaf9;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+    .content{
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 10px;
+      min-width: 0;
+    }
+    .headline{
+      flex: 0 0 auto;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 16px;
+      text-shadow: 0 0 14px rgba(255,255,255,0.12);
+      white-space: nowrap;
+      transition: color 0.55s ease;
+    }
+    .bar.phase-yellow .headline{
+      color: rgba(248, 236, 168, 0.92);
+      text-shadow: 0 0 12px rgba(242,220,56,0.2);
+    }
+    .bar.phase-green .headline{
+      color: rgba(215, 255, 175, 0.93);
+      text-shadow: 0 0 12px rgba(200,255,46,0.22);
+    }
+    .bar.warning .headline{
+      color: rgba(255, 218, 175, 0.93);
+      text-shadow: 0 0 12px rgba(255,170,0,0.18);
+    }
+    .bar.danger .headline{
+      color: rgba(255, 205, 200, 0.94);
+      text-shadow: 0 0 12px rgba(255,59,59,0.2);
+    }
+    .bar.danger-critical .headline{
+      color: rgba(255, 215, 210, 0.95);
+      text-shadow: 0 0 14px rgba(226,0,0,0.22);
+    }
+    .slots{
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+    .slot{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px 5px 6px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      white-space: nowrap;
+      will-change: transform;
+      transition: transform 0.25s ease, background 0.55s ease, border-color 0.55s ease;
+    }
+    .bar.phase-yellow .slot{
+      background: rgba(38, 34, 10, 0.42);
+      border-color: rgba(242, 220, 56, 0.16);
+    }
+    .bar.phase-green .slot{
+      background: rgba(22, 32, 12, 0.44);
+      border-color: rgba(200, 255, 46, 0.18);
+    }
+    .bar.warning .slot{
+      background: rgba(44, 28, 0, 0.44);
+      border-color: rgba(255, 170, 0, 0.2);
+    }
+    .bar.danger .slot{
+      background: rgba(42, 14, 14, 0.46);
+      border-color: rgba(255, 90, 90, 0.22);
+    }
+    .bar.danger-critical .slot{
+      background: rgba(38, 6, 6, 0.52);
+      border-color: rgba(226, 0, 0, 0.28);
+    }
+    .slot:hover{ transform: translateY(-1px); }
+    .rank-num{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 5px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #151515;
+      background: linear-gradient(180deg, var(--gold2), var(--gold));
+      box-shadow: 0 4px 12px rgba(var(--gold-rgb),0.2);
+    }
+    .slot-text{
+      color: var(--text);
+      font-weight: 700;
+      transition: color 0.55s ease;
+    }
+    .slot-text .pct{
+      color: var(--gold2);
+      font-weight: 800;
+      margin-left: 2px;
+      transition: color 0.55s ease;
+    }
+    .bar.phase-yellow .slot-text .pct{ color: #F2DC38; }
+    .bar.phase-green .slot-text .pct{ color: #C8FF2E; }
+    .bar.warning .slot-text .pct{ color: #ffaa00; }
+    .bar.danger .slot-text .pct{ color: #ff8585; }
+    .bar.danger-critical .slot-text .pct{ color: #ff6b6b; }
+    /* 1-е место — всегда «марафонное золото», не акцент темы */
+    .slot.rank-1{
+      border-color: rgba(246,179,74,0.5);
+      background: rgba(246,179,74,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      animation: rank1Soft 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    }
+    .slot.rank-1 .rank-num{
+      background: linear-gradient(180deg, #ffcf7a, #f6b34a);
+      box-shadow: 0 4px 12px rgba(246,179,74,0.2);
+      animation: rank1Num 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    }
+    .slot.rank-1 .slot-text .pct{
+      color: #ffcf7a;
+      text-shadow: 0 0 10px rgba(246,179,74,0.28);
+    }
+    .slot.rank-2{
+      border-color: rgba(200,210,220,0.35);
+    }
+    .slot.rank-2 .rank-num{
+      background: linear-gradient(180deg, #f0f4f8, #c0cad4);
+      box-shadow: 0 4px 12px rgba(200,210,220,0.25);
+    }
+    .slot.rank-3{
+      border-color: rgba(205,150,110,0.4);
+    }
+    .slot.rank-3 .rank-num{
+      background: linear-gradient(180deg, #e8c4a8, #c9956c);
+      box-shadow: 0 4px 12px rgba(205,150,110,0.25);
+    }
+    .slot.rank-4 .rank-num,
+    .slot.rank-5 .rank-num,
+    .slot.rank-6 .rank-num{
+      background: rgba(80,80,90,0.95);
+      color: rgba(245,245,245,0.92);
+      box-shadow: none;
+    }
+    .slot.rank-4,
+    .slot.rank-5,
+    .slot.rank-6{
+      opacity: 0.92;
+      border-color: rgba(255,255,255,0.07);
+    }
+    .empty-hint{
+      color: rgba(243,243,243,0.45);
+      font-weight: 600;
+      font-size: 15px;
+      transition: color 0.55s ease;
+    }
+    .bar.phase-yellow .empty-hint{ color: rgba(236, 224, 140, 0.72); }
+    .bar.phase-green .empty-hint{ color: rgba(215, 255, 175, 0.74); }
+    .bar.warning .empty-hint{ color: rgba(255, 205, 160, 0.74); }
+    .bar.danger .empty-hint{ color: rgba(255, 188, 185, 0.76); }
+    .bar.danger-critical .empty-hint{ color: rgba(255, 198, 195, 0.78); }
+    @keyframes rank1Soft{
+      0%, 100%{
+        opacity: 1;
+        filter: brightness(1) saturate(1);
+      }
+      50%{
+        opacity: 0.9;
+        filter: brightness(1.1) saturate(1.12);
+      }
+    }
+    @keyframes rank1Num{
+      0%, 100%{ transform: scale(1); }
+      50%{ transform: scale(1.03); }
+    }
+  </style>
+</head>
+<body>
+  <div class="bar phase-calm" id="top5InlineMarathonBar">
+    <div class="tag">Top 6</div>
+    <div class="content">
+      <span class="headline" id="headline">Топ 6:</span>
+      <div class="slots" id="slots"><span class="empty-hint">—</span></div>
+    </div>
+  </div>
+
+  <script src="marathon_accent_transition.js"></script>
+  <script>
+    function getFileText(path) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', path + '?cache_bust=' + Date.now() + '_' + Math.random(), true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200 || xhr.status === 0) resolve(xhr.responseText);
+            else reject(xhr.status);
+          }
+        };
+        xhr.send();
+      });
+    }
+
+    MarathonAccent.start(900);
+
+    /** Не затирать успешный рендер пустым ответом (окно между truncate и данными при некатомной записи). */
+    var top5InlineLastGoodRaw = null;
+
+    async function tickPhase(){
+      try{
+        var barEl = document.getElementById('top5InlineMarathonBar');
+        if (!barEl) return;
+        var blinkOn = false;
+        try{
+          blinkOn = (await getFileText('blink.flag')).trim() === '1';
+        }catch(e1){}
+        var sec = null;
+        if (!blinkOn){
+          try{
+            var ttxt = (await getFileText('timer.txt')).trim();
+            if (ttxt){
+              var pp = ttxt.split(':');
+              if (pp.length === 3){
+                var H = parseInt(pp[0], 10);
+                var M = parseInt(pp[1], 10);
+                var S = parseInt(pp[2], 10);
+                if (!isNaN(H) && !isNaN(M) && !isNaN(S)) sec = H * 3600 + M * 60 + S;
+              }
+            }
+          }catch(e2){}
+        }
+        var phaseClass = 'phase-calm';
+        if (blinkOn || (sec !== null && sec <= 0)) phaseClass = 'danger-critical';
+        else if (sec !== null){
+          if (sec > 7200) phaseClass = 'phase-calm';
+          else if (sec > 3600) phaseClass = 'phase-green';
+          else if (sec > 1800) phaseClass = 'phase-yellow';
+          else if (sec > 600) phaseClass = 'warning';
+          else if (sec > 300) phaseClass = 'danger';
+          else phaseClass = 'danger-critical';
+        }
+        barEl.className = 'bar ' + phaseClass;
+      }catch(e){}
+    }
+
+    /** "Nick - 12,3%" -> { name, pct } */
+    function splitNamePct(segment) {
+      const s = (segment || '').trim();
+      const idx = s.lastIndexOf(' - ');
+      if (idx <= 0) return { name: s, pct: '' };
+      return {
+        name: s.slice(0, idx).trim(),
+        pct: s.slice(idx + 3).trim()
+      };
+    }
+
+    async function tick(){
+      try{
+        const title = (await getFileText('title.txt')).trim();
+        const headline = (title || 'Топ 6') + ':';
+        document.getElementById('headline').textContent = headline;
+
+        let raw = (await getFileText('top5_marathon_inline.txt')).trim();
+        /* старый формат файла: "Топ5 за марафон: nick - % | ..." */
+        raw = raw.replace(/^Топ\s*5?\s*за\s*марафон:\s*/i, '').trim();
+        if (raw === '' && top5InlineLastGoodRaw != null && top5InlineLastGoodRaw !== '' && top5InlineLastGoodRaw !== '—') {
+          return;
+        }
+
+        const wrap = document.getElementById('slots');
+        wrap.innerHTML = '';
+
+        if (!raw || raw === '—') {
+          const sp = document.createElement('span');
+          sp.className = 'empty-hint';
+          sp.textContent = '—';
+          wrap.appendChild(sp);
+          top5InlineLastGoodRaw = raw || '—';
+          return;
+        }
+
+        const segments = raw.split(/\s*\|\s*/).map(x => x.trim()).filter(Boolean).slice(0, 6);
+        if (!segments.length) {
+          const sp = document.createElement('span');
+          sp.className = 'empty-hint';
+          sp.textContent = '—';
+          wrap.appendChild(sp);
+          top5InlineLastGoodRaw = raw;
+          return;
+        }
+
+        top5InlineLastGoodRaw = raw;
+        segments.forEach((seg, i) => {
+          const rank = i + 1;
+          const { name, pct } = splitNamePct(seg);
+
+          const slot = document.createElement('span');
+          slot.className = 'slot rank-' + rank;
+
+          const num = document.createElement('span');
+          num.className = 'rank-num';
+          num.textContent = String(rank);
+
+          const txt = document.createElement('span');
+          txt.className = 'slot-text';
+          const nameEl = document.createElement('span');
+          nameEl.textContent = name || '—';
+          if (pct) {
+            const pctEl = document.createElement('span');
+            pctEl.className = 'pct';
+            pctEl.textContent = ' ' + pct;
+            txt.appendChild(nameEl);
+            txt.appendChild(pctEl);
+          } else {
+            txt.appendChild(nameEl);
+          }
+
+          slot.appendChild(num);
+          slot.appendChild(txt);
+          wrap.appendChild(slot);
+        });
+      }catch(e){}
+    }
+    tick();
+    tickPhase();
+    setInterval(tick, 1000);
+    setInterval(tickPhase, 1000);
+  </script>
+</body>
+</html>

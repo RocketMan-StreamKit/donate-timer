@@ -1,0 +1,16 @@
+{
+  "name": "donate-timer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Marathon timer extended by donations: bonus rate windows, donation goal, top donors, marathon time goal and OBS widgets.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc -p tsconfig.worker.json && tsc -p tsconfig.web.json"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.5",
+    "@rocketman-streamkit/types": "^1.3.8",
+    "typescript": "^5.8.3"
+  }
+}

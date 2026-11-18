@@ -1,0 +1,44 @@
+{
+  "id": "donate-timer",
+  "name": {
+    "en": "Donate Timer",
+    "ru": "Донат-таймер",
+    "uk": "Донат-таймер"
+  },
+  "description": {
+    "en": "Marathon timer extended by donations: bonus rate windows, donation goal, top donors, marathon time goal and OBS widgets.",
+    "ru": "Таймер марафона, который продлевают донаты: бонусный курс, донат-гол, топ донатеров, цель по времени и виджеты для OBS.",
+    "uk": "Таймер марафону, який подовжують донати: бонусний курс, донат-гол, топ донатерів, ціль за часом і віджети для OBS."
+  },
+  "type": "application",
+  "version": "1.0.0",
+  "author": "RocketMan System",
+  "icon": "logo.svg",
+  "permissions": [
+    "WEB_CONTENT",
+    "WEB_END_POINTS",
+    "SOCKET_END_POINTS",
+    "DASHBOARD_EVENTS_INCOMING",
+    "STATUS",
+    "NOTIFY"
+  ],
+  "app_version": "1.3.8",
+  "web": "index.html",
+  "web_type": "application",
+  "web_contents": [
+    "style.css",
+    "app.js",
+    "widgets/timer_new.html",
+    "widgets/timer_marathon_block.html",
+    "widgets/marathon_gold_small_v2.html",
+    "widgets/top5_marathon_inline.html",
+    "widgets/top5_marathon_block.html",
+    "widgets/donation_goal.html",
+    "widgets/bonus_rate.html",
+    "widgets/clock_datetime_inline.html",
+    "widgets/webcam_frame.html",
+    "widgets/bridge.js",
+    "widgets/marathon_accent_transition.js",
+    "sounds/bomb_timer.mp3"
+  ]
+}

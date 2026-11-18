@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru" data-accent="orange">
+<head>
+<script src="bridge.js"></script>
+  <meta charset="UTF-8" />
+  <title>Marathon Widget (Gold) v2</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    :root{
+      --gold: #f6b34a;
+      --gold2:#ffcf7a;
+      --gold-rgb:246,179,74;
+      --gold2-rgb:255,207,122;
+      --text:#f3f3f3;
+      --muted: rgba(243,243,243,0.68);
+      --bg: rgba(0,0,0,0.52);
+      --line: rgba(var(--gold2-rgb), 0.18);
+    }
+    html[data-accent="purple"]{
+      --gold:#c084fc;
+      --gold2:#e9d5ff;
+      --gold-rgb:192,132,252;
+      --gold2-rgb:233,213,255;
+    }
+    html[data-accent="green"]{
+      --gold:#4ade80;
+      --gold2:#bbf7d0;
+      --gold-rgb:74,222,128;
+      --gold2-rgb:187,247,208;
+    }
+    html[data-accent="blue"]{
+      --gold:#38bdf8;
+      --gold2:#bae6fd;
+      --gold-rgb:56,189,248;
+      --gold2-rgb:186,230,253;
+    }
+    html[data-accent="red"]{
+      --gold:#FF3232;
+      --gold2:#FFB3B3;
+      --gold-rgb:255,50,50;
+      --gold2-rgb:255,179,179;
+    }
+    html[data-accent="pink"]{
+      --gold:#FF5F87;
+      --gold2:#FFB0C8;
+      --gold-rgb:255,95,135;
+      --gold2-rgb:255,176,200;
+    }
+    html[data-accent="yellow"]{
+      --gold:#FFE600;
+      --gold2:#FFF566;
+      --gold-rgb:255,230,0;
+      --gold2-rgb:255,245,102;
+    }
+    html[data-accent="lime"]{
+      --gold:#CDFF5F;
+      --gold2:#E8FFA5;
+      --gold-rgb:205,255,95;
+      --gold2-rgb:232,255,165;
+    }
+    html[data-accent="navy"]{
+      --gold:#5F65FF;
+      --gold2:#B8BBFF;
+      --gold-rgb:95,101,255;
+      --gold2-rgb:184,187,255;
+    }
+    html[data-accent="gray"]{
+      --gold:#484848;
+      --gold2:#A8A8A8;
+      --gold-rgb:72,72,72;
+      --gold2-rgb:168,168,168;
+    }
+    html, body{
+      margin:0; padding:0;
+      width:100%; height:100%;
+      background: transparent;
+      font-family: "Segoe UI", Arial, sans-serif;
+      overflow:hidden;
+    }
+    .wrap{
+      width: 400px;
+      height: 200px;
+      box-sizing: border-box;
+      padding: 14px 14px;
+      border-radius: 18px;
+      background:
+        radial-gradient(1200px 350px at 70% 0%, rgba(var(--gold-rgb),0.20), transparent 55%),
+        radial-gradient(900px 450px at 0% 120%, rgba(var(--gold2-rgb),0.12), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,0.62), rgba(0,0,0,0.35));
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.6);
+      position: relative;
+      transition: background 1.05s ease, border-color 1.05s ease, box-shadow 1.05s ease;
+    }
+    .wrap.phase-green {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(200,255,46,0.22), transparent 58%),
+        linear-gradient(180deg, rgba(18,28,10,0.72), rgba(0,0,0,0.58));
+      border-color: rgba(200, 255, 46, 0.36);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.6), 0 0 22px rgba(200,255,46,0.12);
+    }
+    .wrap.phase-yellow {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(242,220,56,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(28,26,8,0.72), rgba(0,0,0,0.58));
+      border-color: rgba(242, 220, 56, 0.38);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.6), 0 0 24px rgba(242,220,56,0.12);
+    }
+    .wrap.warning {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(255,170,0,0.28), transparent 58%),
+        linear-gradient(180deg, rgba(38,22,0,0.74), rgba(0,0,0,0.58));
+      border-color: rgba(255, 170, 0, 0.42);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.6), 0 0 26px rgba(255,170,0,0.14);
+    }
+    .wrap.danger {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(255,59,59,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(42,10,10,0.76), rgba(0,0,0,0.58));
+      border-color: rgba(255, 90, 90, 0.48);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.6), 0 0 28px rgba(255,59,59,0.16);
+    }
+    .wrap.danger-critical {
+      background:
+        radial-gradient(780px 240px at 75% 0%, rgba(226,0,0,0.34), transparent 55%),
+        linear-gradient(180deg, rgba(48,4,4,0.82), rgba(0,0,0,0.62));
+      border-color: rgba(226, 0, 0, 0.55);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.6), 0 0 32px rgba(226,0,0,0.22);
+    }
+    .wrap.phase-green .timer .val { color: #C8FF2E; text-shadow: 0 0 18px rgba(200,255,46,0.28); }
+    .wrap.phase-yellow .timer .val { color: #F2DC38; text-shadow: 0 0 18px rgba(242,220,56,0.28); }
+    .wrap.warning .timer .val { color: #ffaa00; text-shadow: 0 0 18px rgba(255,170,0,0.28); }
+    .wrap.danger .timer .val { color: #ff3b3b; text-shadow: 0 0 18px rgba(255,59,59,0.28); }
+    .wrap.danger-critical .timer .val { color: #E20000; text-shadow: 0 0 18px rgba(226,0,0,0.32); }
+    .top{
+      display:flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .brand{
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .sum{
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--gold2);
+      text-shadow: 0 0 24px rgba(var(--gold-rgb),0.25);
+      white-space: nowrap;
+    }
+    .sum small{
+      color: rgba(255,255,255,0.72);
+      font-weight: 700;
+      font-size: 14px;
+      margin-left: 6px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .timer{
+      border-radius: 16px;
+      padding: 14px 12px;
+      background: var(--bg);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .timer .label{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .timer .val{
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      color: var(--text);
+      text-shadow: 0 0 22px rgba(255,255,255,0.11);
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .bottom{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.26);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      color: rgba(255,255,255,0.80);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--gold);
+      box-shadow: 0 0 14px rgba(var(--gold-rgb),0.6);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ transform: scale(1); opacity: 1; }
+      50%{ transform: scale(1.55); opacity: 0.75; }
+    }
+    .onair{
+      font-weight: 800;
+      color: var(--text);
+      text-shadow: 0 0 16px rgba(255,255,255,0.10);
+      font-size: 18px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap phase-calm">
+    <div class="top">
+      <div id="marathonBrand" class="brand">Stream Marathon</div>
+      <div class="sum"><span id="totalRub">0</span><small data-dt-currency-symbol>₽</small></div>
+    </div>
+    <div class="grid">
+      <div class="timer">
+        <div class="label">Таймер</div>
+        <div id="timer" class="val">00:00:00</div>
+      </div>
+      <div class="bottom">
+        <div class="pill"><span class="dot"></span> в эфире</div>
+        <div id="onAir" class="onair">00:00:00</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function getFileText(path) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', path + '?cache_bust=' + Date.now() + '_' + Math.random(), true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200 || xhr.status === 0) resolve(xhr.responseText);
+            else reject(xhr.status);
+          }
+        };
+        xhr.send();
+      });
+    }
+
+    var VALID_MARATHON_ACCENTS = ['orange','purple','green','blue','red','pink','yellow','lime','navy','gray'];
+    var marathonAccentPollTimer = null;
+
+    function normalizeMarathonAccent(text) {
+      var v = String(text || '').trim().toLowerCase();
+      return VALID_MARATHON_ACCENTS.indexOf(v) >= 0 ? v : 'orange';
+    }
+
+    async function syncMarathonAccent() {
+      try {
+        var raw = await getFileText('marathon_widget_accent.txt');
+        document.documentElement.setAttribute('data-accent', normalizeMarathonAccent(raw));
+      } catch (e) {}
+    }
+
+    function ensureMarathonAccentPolling() {
+      if (marathonAccentPollTimer) return;
+      marathonAccentPollTimer = setInterval(syncMarathonAccent, 900);
+    }
+
+    syncMarathonAccent();
+    ensureMarathonAccentPolling();
+
+    function fmtInt(n) {
+      const x = Number(n || 0);
+      if (!isFinite(x)) return "0";
+      return Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+    var GOLD_PHASES = ['phase-calm', 'phase-green', 'phase-yellow', 'warning', 'danger', 'danger-critical'];
+
+    function setGoldPhase(phaseClass) {
+      var wrap = document.querySelector('.wrap');
+      if (!wrap) return;
+      for (var i = 0; i < GOLD_PHASES.length; i++) {
+        if (GOLD_PHASES[i] === phaseClass) wrap.classList.add(GOLD_PHASES[i]);
+        else wrap.classList.remove(GOLD_PHASES[i]);
+      }
+    }
+
+    function phaseFromMarathon(blinkOn, sec) {
+      if (blinkOn || (sec !== null && sec <= 0)) return 'danger-critical';
+      if (sec === null) return 'phase-calm';
+      if (sec > 7200) return 'phase-calm';
+      if (sec > 3600) return 'phase-green';
+      if (sec > 1800) return 'phase-yellow';
+      if (sec > 600) return 'warning';
+      if (sec > 300) return 'danger';
+      return 'danger-critical';
+    }
+
+    function secondsFromTimerText(raw) {
+      if (!raw) return null;
+      var pp = raw.split(':');
+      if (pp.length !== 3) return null;
+      var H = parseInt(pp[0], 10);
+      var M = parseInt(pp[1], 10);
+      var S = parseInt(pp[2], 10);
+      if (isNaN(H) || isNaN(M) || isNaN(S)) return null;
+      return H * 3600 + M * 60 + S;
+    }
+
+    async function tick() {
+      var timerOk = false;
+      var timerRaw = '';
+      try {
+        timerRaw = (await getFileText('timer.txt')).trim();
+        timerOk = true;
+        document.getElementById('timer').textContent = timerRaw || "00:00:00";
+      } catch (e) {}
+      try { document.getElementById('onAir').textContent = (await getFileText('on_air.txt')).trim() || "00:00:00"; } catch(e){}
+      try { document.getElementById('totalRub').textContent = fmtInt((await getFileText('total_donations_rub.txt')).trim()); } catch(e){}
+      var blinkOn = false;
+      try { blinkOn = (await getFileText('blink.flag')).trim() === '1'; } catch (e1) {}
+      var sec = (!blinkOn && timerOk) ? secondsFromTimerText(timerRaw) : null;
+      setGoldPhase(phaseFromMarathon(blinkOn, sec));
+    }
+    async function tickTitle() {
+      try {
+        const t = (await getFileText('title.txt')).trim();
+        document.getElementById('marathonBrand').textContent = t || "Stream Marathon";
+      } catch(e){}
+    }
+    tick();
+    tickTitle();
+    setInterval(tick, 1000);
+    setInterval(tickTitle, 1000);
+  </script>
+</body>
+</html>

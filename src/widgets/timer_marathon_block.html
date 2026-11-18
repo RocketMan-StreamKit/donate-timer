@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="ru" data-accent="orange">
+<head>
+<script src="bridge.js"></script>
+  <meta charset="UTF-8" />
+  <title>Таймер (стиль марафон-блока)</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    :root{
+      --bg: rgba(0,0,0,0.55);
+      --gold:#f6b34a;
+      --gold2:#ffcf7a;
+      --gold-rgb:246,179,74;
+      --gold2-rgb:255,207,122;
+      --stroke: rgba(var(--gold2-rgb), 0.18);
+      --text:#f3f3f3;
+      --muted: rgba(243,243,243,0.72);
+      --soft: rgba(255,255,255,0.08);
+    }
+    html[data-accent="purple"]{
+      --gold:#c084fc;
+      --gold2:#e9d5ff;
+      --gold-rgb:192,132,252;
+      --gold2-rgb:233,213,255;
+    }
+    html[data-accent="green"]{
+      --gold:#4ade80;
+      --gold2:#bbf7d0;
+      --gold-rgb:74,222,128;
+      --gold2-rgb:187,247,208;
+    }
+    html[data-accent="blue"]{
+      --gold:#38bdf8;
+      --gold2:#bae6fd;
+      --gold-rgb:56,189,248;
+      --gold2-rgb:186,230,253;
+    }
+    html[data-accent="red"]{
+      --gold:#FF3232;
+      --gold2:#FFB3B3;
+      --gold-rgb:255,50,50;
+      --gold2-rgb:255,179,179;
+    }
+    html[data-accent="pink"]{
+      --gold:#FF5F87;
+      --gold2:#FFB0C8;
+      --gold-rgb:255,95,135;
+      --gold2-rgb:255,176,200;
+    }
+    html[data-accent="yellow"]{
+      --gold:#FFE600;
+      --gold2:#FFF566;
+      --gold-rgb:255,230,0;
+      --gold2-rgb:255,245,102;
+    }
+    html[data-accent="lime"]{
+      --gold:#CDFF5F;
+      --gold2:#E8FFA5;
+      --gold-rgb:205,255,95;
+      --gold2-rgb:232,255,165;
+    }
+    html[data-accent="navy"]{
+      --gold:#5F65FF;
+      --gold2:#B8BBFF;
+      --gold-rgb:95,101,255;
+      --gold2-rgb:184,187,255;
+    }
+    html[data-accent="gray"]{
+      --gold:#484848;
+      --gold2:#A8A8A8;
+      --gold-rgb:72,72,72;
+      --gold2-rgb:168,168,168;
+    }
+    html, body{
+      margin:0; padding:0;
+      width:100%;
+      min-height:100%;
+      background: transparent;
+      overflow: visible;
+      font-family: "Segoe UI", Arial, sans-serif;
+      user-select:none;
+    }
+    body{
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .card{
+      width: 320px;
+      min-width: 260px;
+      max-width: 400px;
+      box-sizing: border-box;
+      padding: 6px 12px 6px;
+      border-radius: 18px;
+      border: 1px solid transparent;
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: background 0.55s ease, border-color 0.55s ease, box-shadow 0.55s ease;
+    }
+    .card.phase-calm {
+      transition: background 1.05s ease, border-color 1.05s ease, box-shadow 1.05s ease;
+      background:
+        radial-gradient(900px 280px at 80% 0%, rgba(var(--gold-rgb),0.18), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,0.62), var(--bg));
+      border-color: var(--stroke);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.28), 0 1px 3px rgba(0,0,0,0.2);
+    }
+    /* 1 ч < остаток ≤ 2 ч — лайм для цифр таймера */
+    .card.phase-green {
+      transition: background 1.05s ease, border-color 1.05s ease, box-shadow 1.05s ease;
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(200,255,46,0.22), transparent 58%),
+        linear-gradient(180deg, rgba(18,28,10,0.72), rgba(0,0,0,0.58));
+      border-color: rgba(200, 255, 46, 0.36);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 22px rgba(200,255,46,0.12);
+    }
+    .card.phase-yellow {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(242,220,56,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(28,26,8,0.72), rgba(0,0,0,0.58));
+      border-color: rgba(242, 220, 56, 0.38);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 24px rgba(242,220,56,0.12);
+    }
+    .card.warning {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(255,170,0,0.28), transparent 58%),
+        linear-gradient(180deg, rgba(38,22,0,0.74), rgba(0,0,0,0.58));
+      border-color: rgba(255, 170, 0, 0.42);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.26), 0 0 26px rgba(255,170,0,0.14);
+    }
+    .card.danger {
+      background:
+        radial-gradient(820px 260px at 78% 0%, rgba(255,59,59,0.26), transparent 58%),
+        linear-gradient(180deg, rgba(42,10,10,0.76), rgba(0,0,0,0.58));
+      border-color: rgba(255, 90, 90, 0.48);
+      box-shadow: 0 4px 22px rgba(0,0,0,0.28), 0 0 28px rgba(255,59,59,0.16);
+    }
+    .card.danger-critical {
+      background:
+        radial-gradient(780px 240px at 75% 0%, rgba(226,0,0,0.34), transparent 55%),
+        linear-gradient(180deg, rgba(48,4,4,0.82), rgba(0,0,0,0.62));
+      border-color: rgba(226, 0, 0, 0.55);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.32), 0 0 32px rgba(226,0,0,0.22);
+    }
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      width:100%;
+    }
+    .title{
+      color: var(--gold2);
+      text-shadow: 0 0 18px rgba(var(--gold-rgb), 0.28);
+      font-size: 18px;
+      letter-spacing: 0.03em;
+      font-weight: 800;
+      line-height: 1.15;
+      white-space: normal;
+      word-break: break-word;
+      text-align: center;
+      width: 100%;
+      transform: translateY(-2px);
+      transition: color 0.55s ease, text-shadow 0.55s ease, transform 0.55s ease;
+    }
+    .card.phase-yellow .title{
+      color: rgba(248, 236, 168, 0.85);
+    }
+    .card.phase-green .title{
+      color: rgba(215, 255, 165, 0.88);
+    }
+    .card.warning .title{
+      color: rgba(255, 218, 175, 0.88);
+    }
+    .card.danger .title{
+      color: rgba(255, 205, 200, 0.9);
+    }
+    .card.danger-critical .title{
+      color: rgba(255, 215, 210, 0.93);
+    }
+    .list{
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 4px 10px 10px;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.55s ease, border-color 0.55s ease;
+    }
+    .card.phase-yellow .list{
+      background: rgba(38, 34, 10, 0.48);
+      border-color: rgba(242, 220, 56, 0.14);
+    }
+    .card.phase-green .list{
+      background: rgba(22, 32, 12, 0.48);
+      border-color: rgba(200, 255, 46, 0.14);
+    }
+    .card.warning .list{
+      background: rgba(44, 28, 0, 0.48);
+      border-color: rgba(255, 170, 0, 0.18);
+    }
+    .card.danger .list{
+      background: rgba(42, 14, 14, 0.5);
+      border-color: rgba(255, 90, 90, 0.2);
+    }
+    .card.danger-critical .list{
+      background: rgba(38, 6, 6, 0.55);
+      border-color: rgba(226, 0, 0, 0.26);
+    }
+    .blink-strip{
+      min-height: 0;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .blink-strip--card-footer{
+      flex-shrink: 0;
+      flex-grow: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+      position: relative;
+      height: 11px;
+      min-height: 11px;
+      max-height: 11px;
+      overflow: hidden;
+      pointer-events: none;
+      line-height: 11px;
+    }
+    .blink-strip--card-footer .btxt{
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      margin: 0;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+    .blink-strip .btxt{
+      display: none;
+      transition: color 0.55s ease, text-shadow 0.55s ease;
+    }
+    .blink-strip .btxt.on{
+      display: block;
+    }
+    /* Цвет строки статуса по фазе карточки */
+    .card.phase-green .blink-strip #footerPhaseMsg.on{
+      color: #C8FF2E;
+      text-shadow: 0 0 10px rgba(200,255,46,0.45);
+    }
+    .card.phase-yellow .blink-strip #footerPhaseMsg.on{
+      color: #F2DC38;
+      text-shadow: 0 0 12px rgba(242,220,56,0.42);
+    }
+    .card.warning .blink-strip #footerPhaseMsg.on{
+      color: #ffaa00;
+      text-shadow: 0 0 12px rgba(255,170,0,0.42);
+    }
+    .card.danger .blink-strip #footerPhaseMsg.on{
+      color: #ff6b6b;
+      text-shadow: 0 0 12px rgba(255,80,80,0.45);
+    }
+    .card.danger-critical .blink-strip #footerPhaseMsg.on{
+      color: #ff9e9e;
+      text-shadow: 0 0 14px rgba(226,0,0,0.48);
+    }
+    .card.phase-calm .blink-strip #footerPhaseMsg.on{
+      color: var(--gold2);
+      text-shadow: 0 0 12px rgba(var(--gold-rgb),0.35);
+    }
+
+    #lastDonationLine{
+      text-align: center;
+      color: rgba(243,243,243,0.9);
+      font-size: 14.4px;
+      font-weight: 700;
+      line-height: 1.2;
+      word-break: keep-all;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.02em;
+      padding: 0 4px;
+      transition: color 0.55s ease;
+    }
+    .card.phase-yellow #lastDonationLine:not(:empty){
+      color: rgba(252, 246, 210, 0.94);
+    }
+    .card.phase-green #lastDonationLine:not(:empty){
+      color: rgba(228, 255, 200, 0.94);
+    }
+    .card.warning #lastDonationLine:not(:empty){
+      color: rgba(255, 228, 200, 0.94);
+    }
+    .card.danger #lastDonationLine:not(:empty){
+      color: rgba(255, 215, 210, 0.95);
+    }
+    .card.danger-critical #lastDonationLine:not(:empty){
+      color: rgba(255, 220, 218, 0.96);
+    }
+    #lastDonationLine:empty{
+      display: none;
+    }
+    #lastDonationLine:not(:empty){
+      display: block;
+    }
+    #timerWrap{
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 0;
+      margin-top: -3px;
+      margin-bottom: 0;
+    }
+    #container {
+      line-height: 1;
+      font-size: 2.85rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+    }
+    #container .flip-timer-row {
+      display: inline-flex;
+      align-items: stretch;
+      line-height: 1;
+      vertical-align: middle;
+      transform-origin: center center;
+      text-shadow: none !important;
+      flex-shrink: 0;
+      justify-content: center;
+    }
+    #container .flip-timer-row * {
+      text-shadow: none !important;
+    }
+    .timer-glow-white {
+      filter: drop-shadow(0 0 7px rgba(0, 0, 0, 0.32)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.45));
+      animation: none;
+      transform: none;
+    }
+    .timer-glow-yellow {
+      filter: drop-shadow(0 0 10px rgba(242, 220, 56, 0.36)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.28));
+      animation: none;
+      transform: none;
+    }
+    .timer-glow-lime {
+      filter: drop-shadow(0 0 10px rgba(200, 255, 46, 0.42)) drop-shadow(0 0 2px rgba(0, 0, 0, 0.26));
+      animation: none;
+      transform: none;
+    }
+    .timer-glow-orange {
+      animation: timerRowGlowOrangeMb 0.85s ease-in-out infinite;
+    }
+    .timer-glow-red {
+      animation: timerRowGlowRedMb 0.85s ease-in-out infinite;
+    }
+    .timer-glow-redcrit {
+      filter: drop-shadow(0 0 12px rgba(226, 0, 0, 0.44)) drop-shadow(0 0 4px rgba(226, 0, 0, 0.3));
+      animation: none;
+      transform: none;
+    }
+    @keyframes timerRowGlowOrangeMb {
+      0%, 100% {
+        filter: drop-shadow(0 0 6px rgba(255, 170, 0, 0.6)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.22));
+        transform: scale(1);
+      }
+      50% {
+        filter: drop-shadow(0 0 16px rgba(255, 170, 0, 0.78)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.18));
+        transform: scale(1.04);
+      }
+    }
+    @keyframes timerRowGlowRedMb {
+      0%, 100% {
+        filter: drop-shadow(0 0 7px rgba(255, 59, 59, 0.58)) drop-shadow(0 0 1px rgba(0, 0, 0, 0.22));
+        transform: scale(1);
+      }
+      50% {
+        filter: drop-shadow(0 0 18px rgba(255, 59, 59, 0.72)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.16));
+        transform: scale(1.04);
+      }
+    }
+    .flip-digit-slot {
+      display: inline-block;
+      height: 1em;
+      width: 1ch;
+      min-width: 1ch;
+      max-width: 1ch;
+      box-sizing: border-box;
+      text-align: center;
+      overflow: visible;
+      vertical-align: top;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1, "lnum" 1;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0px, #000 5px, #000 calc(100% - 5px), transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0px, #000 5px, #000 calc(100% - 5px), transparent 100%);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+    }
+    .flip-digit-track {
+      display: flex;
+      flex-direction: column;
+      transition: none;
+      will-change: transform;
+    }
+    .flip-digit-char {
+      height: 1em;
+      line-height: 1em;
+      flex-shrink: 0;
+    }
+    .flip-colon {
+      display: inline-block;
+      width: 0.34em;
+      min-width: 0.34em;
+      max-width: 0.34em;
+      box-sizing: border-box;
+      text-align: center;
+      flex-shrink: 0;
+      pointer-events: none;
+      opacity: 0.92;
+    }
+    #container.phase-calm {
+      color: var(--text);
+    }
+    #container.phase-green {
+      color: #C8FF2E;
+    }
+    #container.phase-yellow {
+      color: #F2DC38;
+    }
+    #container.warning {
+      color: #ffaa00;
+      animation: blockWarnPulse 0.85s ease-in-out infinite;
+    }
+    #container.danger {
+      color: #ff3b3b;
+      animation: blockWarnPulse 0.85s ease-in-out infinite;
+    }
+    #container.danger-critical {
+      color: #E20000;
+    }
+    @keyframes blockWarnPulse{
+      0%, 100%{ filter: brightness(1); opacity: 1; }
+      50%{ filter: brightness(1.12); opacity: 0.94; }
+    }
+    .fadeIn {
+      animation: fadeInCard 0.5s ease;
+    }
+    @keyframes fadeInCard {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    #rateInfo{
+      color: var(--muted);
+      font-size: 14.4px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.2;
+      word-break: break-word;
+      transition: color 0.55s ease;
+    }
+    .card.phase-yellow #rateInfo{
+      color: rgba(236, 224, 140, 0.82);
+    }
+    .card.phase-green #rateInfo{
+      color: rgba(215, 255, 175, 0.84);
+    }
+    .card.warning #rateInfo{
+      color: rgba(255, 205, 160, 0.84);
+    }
+    .card.danger #rateInfo{
+      color: rgba(255, 188, 185, 0.86);
+    }
+    .card.danger-critical #rateInfo{
+      color: rgba(255, 198, 195, 0.88);
+    }
+    #donationAlert {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      opacity: 0;
+      background: rgba(0,0,0,0.88);
+      border-radius: 12px;
+      padding: 12px 10px;
+      z-index: 50;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 2s;
+      max-width: 98%;
+      min-width: 0;
+      font-size: 1em;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    #donationAlertNick {
+      font-weight: 900;
+      color: #fff;
+      font-size: 1.35rem;
+      word-break: break-word;
+      text-align: center;
+      white-space: nowrap;
+      margin: 0;
+      padding: 0;
+      line-height: 1.2;
+    }
+    #donationAlertTime {
+      color: rgba(255,255,255,0.92);
+      font-size: 0.95rem;
+      text-align: center;
+      margin: 4px 0 0;
+      padding: 0;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+  <div class="card phase-calm" id="marathonCard">
+    <div class="header">
+      <div id="titleInfo" class="title"></div>
+    </div>
+    <div class="list">
+      <div id="lastDonationLine"></div>
+      <div id="timerWrap">
+        <div id="container" class="phase-calm">Таймер</div>
+        <div id="donationAlert">
+          <span id="donationAlertNick"></span>
+          <span id="donationAlertTime"></span>
+        </div>
+      </div>
+      <div id="rateInfo">…</div>
+    </div>
+    <div class="blink-strip blink-strip--card-footer">
+      <span id="footerPhaseMsg" class="btxt" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  <script src="marathon_accent_transition.js"></script>
+  <script>
+    const container = document.getElementById('container');
+    const marathonCard = document.getElementById('marathonCard');
+    let isSyncing = false;
+    let timerDigitsInitialized = false;
+    let lastServerSeconds = null;
+    let visualSeconds = null;
+    let grantState = null;
+    let grantRafId = 0;
+    const DONATION_ALERT_VISIBLE_MS = 10000;
+    const DONATION_ALERT_FADE_MS = 2000;
+    const POST_GRANT_BEFORE_NEXT_ALERT_MS = 2200;
+    const MANUAL_GRANT_WAIT_MS = 1100;
+    let donationGrantBarrierCount = 0;
+    let grantBumpDecisionTimer = null;
+    let pendingGrantBump = null;
+    let pendingGrantDeltaQueue = [];
+
+    function pendingHiddenGrantSum() {
+      return pendingGrantDeltaQueue.reduce(function(a, b) { return a + b; }, 0);
+    }
+
+    function resetGrantDeferralAndBumpTimer() {
+      if (grantBumpDecisionTimer) {
+        clearTimeout(grantBumpDecisionTimer);
+        grantBumpDecisionTimer = null;
+      }
+      pendingGrantBump = null;
+      pendingGrantDeltaQueue.length = 0;
+    }
+
+    function beginGrantRevealForLastClosedAlert() {
+      if (pendingGrantDeltaQueue.length === 0) {
+        processDonationAlertQueue();
+        return;
+      }
+      const toSrv = lastServerSeconds;
+      if (toSrv === null || !isFinite(toSrv)) {
+        pendingGrantDeltaQueue.length = 0;
+        processDonationAlertQueue();
+        return;
+      }
+      stopGrantAnimation();
+      const head = pendingGrantDeltaQueue[0];
+      const remainingAfter = pendingHiddenGrantSum() - head;
+      const from = Math.max(0, Math.round(visualSeconds != null ? visualSeconds : toSrv - pendingHiddenGrantSum()));
+      const to = Math.max(from, toSrv - remainingAfter);
+      if (to > from) {
+        grantState = {
+          from0: from,
+          to: to,
+          startT: performance.now(),
+          durationMs: grantDurationMs(to - from),
+          chainReveal: true,
+          resumeDonationQueueAfter: true
+        };
+        visualSeconds = from;
+        kickGrantAnimation();
+      } else {
+        visualSeconds = to;
+        updateDisplay(to);
+        pendingGrantDeltaQueue.shift();
+        setTimeout(function() { processDonationAlertQueue(); }, POST_GRANT_BEFORE_NEXT_ALERT_MS);
+      }
+    }
+
+    function stopGrantAnimation() {
+      if (grantRafId) {
+        cancelAnimationFrame(grantRafId);
+        grantRafId = 0;
+      }
+      grantState = null;
+    }
+
+    function grantEase(t) {
+      t = Math.min(1, Math.max(0, t));
+      return t * t * (3 - 2 * t);
+    }
+
+    function grantDurationMs(deltaSec) {
+      return Math.min(12000, Math.max(280, Math.round(deltaSec * 52)));
+    }
+
+    const DIGIT_FLIP_TRANSITION = 'transform 0.58s cubic-bezier(0.22, 1, 0.36, 1)';
+
+    function grantStep() {
+      grantRafId = 0;
+      if (!grantState) return;
+      const now = performance.now();
+      const st = grantState;
+      const t = (now - st.startT) / st.durationMs;
+      if (t >= 1) {
+        visualSeconds = st.to;
+        updateDisplay(Math.round(visualSeconds));
+        if (st.chainReveal && pendingGrantDeltaQueue.length > 0) {
+          pendingGrantDeltaQueue.shift();
+        }
+        var resumeQ = st.resumeDonationQueueAfter;
+        grantState = null;
+        if (resumeQ) {
+          setTimeout(function() { processDonationAlertQueue(); }, POST_GRANT_BEFORE_NEXT_ALERT_MS);
+        }
+        return;
+      }
+      visualSeconds = st.from0 + (st.to - st.from0) * grantEase(t);
+      updateDisplay(Math.round(visualSeconds));
+      grantRafId = requestAnimationFrame(grantStep);
+    }
+
+    function kickGrantAnimation() {
+      if (grantRafId) cancelAnimationFrame(grantRafId);
+      grantRafId = requestAnimationFrame(grantStep);
+    }
+
+    function getFileText(path) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', path + '?cache_bust=' + Date.now() + '_' + Math.random(), true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200 || xhr.status === 0) resolve(xhr.responseText);
+            else reject(xhr.status);
+          }
+        };
+        xhr.send();
+      });
+    }
+
+    MarathonAccent.start(900);
+
+    async function isBlinking() {
+      try {
+        const text = await getFileText('blink.flag');
+        return text.trim() === '1';
+      } catch (e) {}
+      return false;
+    }
+
+
+    function createDigitSlot(char) {
+      const slot = document.createElement('span');
+      slot.className = 'flip-digit-slot';
+      const track = document.createElement('span');
+      track.className = 'flip-digit-track';
+      const span = document.createElement('span');
+      span.className = 'flip-digit-char';
+      span.textContent = char;
+      track.appendChild(span);
+      slot.appendChild(track);
+      slot._track = track;
+      slot._current = char;
+      return slot;
+    }
+
+    function setDigitImmediate(slot, ch) {
+      const track = slot._track;
+      track.style.transition = 'none';
+      track.innerHTML = '<span class="flip-digit-char">' + ch + '</span>';
+      track.style.transform = 'translateY(0)';
+      slot._current = ch;
+      void track.offsetHeight;
+      track.style.transition = '';
+    }
+
+    /** flipUp: начисление (grant) — новая цифра снизу, движение вверх; иначе обратный отсчёт — вниз. */
+    function animateDigitFlip(slot, newChar, flipUp) {
+      const track = slot._track;
+      const oldChar = slot._current;
+      if (oldChar === newChar) return;
+      if (track._busy) {
+        track._queued = newChar;
+        track._queuedFlipUp = flipUp;
+        return;
+      }
+      track._busy = true;
+      track.style.transition = 'none';
+      track.innerHTML = '';
+      const sNew = document.createElement('span');
+      sNew.className = 'flip-digit-char';
+      sNew.textContent = newChar;
+      const sOld = document.createElement('span');
+      sOld.className = 'flip-digit-char';
+      sOld.textContent = oldChar;
+      if (flipUp) {
+        track.appendChild(sOld);
+        track.appendChild(sNew);
+        track.style.transform = 'translateY(0)';
+        void track.offsetHeight;
+        track.style.transition = DIGIT_FLIP_TRANSITION;
+        track.style.transform = 'translateY(-1em)';
+      } else {
+        track.appendChild(sNew);
+        track.appendChild(sOld);
+        track.style.transform = 'translateY(-1em)';
+        void track.offsetHeight;
+        track.style.transition = DIGIT_FLIP_TRANSITION;
+        track.style.transform = 'translateY(0)';
+      }
+      const onEnd = function(e) {
+        if (e.propertyName !== 'transform') return;
+        track.removeEventListener('transitionend', onEnd);
+        track.style.transition = 'none';
+        track.innerHTML = '<span class="flip-digit-char">' + newChar + '</span>';
+        track.style.transform = 'translateY(0)';
+        slot._current = newChar;
+        track._busy = false;
+        void track.offsetHeight;
+        track.style.transition = '';
+        if (track._queued && track._queued !== slot._current) {
+          const q = track._queued;
+          const qUp = track._queuedFlipUp;
+          track._queued = null;
+          track._queuedFlipUp = undefined;
+          requestAnimationFrame(() => animateDigitFlip(slot, q, qUp));
+        } else {
+          track._queued = null;
+          track._queuedFlipUp = undefined;
+        }
+      };
+      track.addEventListener('transitionend', onEnd);
+    }
+
+    function setFlipTimerFromSeconds(totalSeconds, animate, flipDigitsUp) {
+      let sec = Math.max(0, Math.floor(Number(totalSeconds)));
+      if (!isFinite(sec)) sec = 0;
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      const hStr = String(h).padStart(2, '0');
+      const mStr = String(m).padStart(2, '0');
+      const sStr = String(s).padStart(2, '0');
+      const flat = [];
+      for (let i = 0; i < hStr.length; i++) flat.push(hStr.charAt(i));
+      flat.push(':', mStr.charAt(0), mStr.charAt(1), ':', sStr.charAt(0), sStr.charAt(1));
+      const pKey = hStr.length + '-2-2';
+      let row = container.querySelector('.flip-timer-row');
+      let localAnimate = animate;
+      if (!row || row._pKey !== pKey) {
+        if (row) row.remove();
+        container.textContent = '';
+        row = document.createElement('div');
+        row.className = 'flip-timer-row';
+        row._pKey = pKey;
+        // создаём ряд в "старом" состоянии, чтобы потом анимировать в новое
+        const hoursLen = hStr.length;
+        const prevHours = (container._lastHoursStr || '00');
+        let prevHoursAdj = prevHours;
+        if (prevHoursAdj.length < hoursLen) prevHoursAdj = prevHoursAdj.padStart(hoursLen, '0');
+        if (prevHoursAdj.length > hoursLen) prevHoursAdj = prevHoursAdj.slice(-hoursLen);
+        const prevM = (container._lastMStr || '00').padStart(2, '0').slice(-2);
+        const prevS = (container._lastSStr || '00').padStart(2, '0').slice(-2);
+        const prevFlat = [];
+        for (let i = 0; i < prevHoursAdj.length; i++) prevFlat.push(prevHoursAdj.charAt(i));
+        prevFlat.push(':', prevM.charAt(0), prevM.charAt(1), ':', prevS.charAt(0), prevS.charAt(1));
+        for (let j = 0; j < prevFlat.length; j++) {
+          const c = prevFlat[j];
+          if (c === ':') {
+            const sep = document.createElement('span');
+            sep.className = 'flip-colon';
+            sep.textContent = ':';
+            row.appendChild(sep);
+          } else {
+            row.appendChild(createDigitSlot(c));
+          }
+        }
+        container.appendChild(row);
+      }
+      row = container.querySelector('.flip-timer-row');
+      const digitSlots = [];
+      for (let ci = 0; ci < row.children.length; ci++) {
+        const node = row.children[ci];
+        if (node.classList && node.classList.contains('flip-colon')) continue;
+        digitSlots.push(node);
+      }
+      const digitChars = flat.filter(function(c) { return c !== ':'; });
+      const apply = () => {
+        for (let i = 0; i < digitSlots.length; i++) {
+          const ch = digitChars[i];
+          if (ch === undefined) continue;
+          const slot = digitSlots[i];
+          if (!slot || slot._current === ch) continue;
+          if (localAnimate) animateDigitFlip(slot, ch, !!flipDigitsUp);
+          else setDigitImmediate(slot, ch);
+        }
+      };
+      if (localAnimate) requestAnimationFrame(apply);
+      else apply();
+      container._lastHoursStr = hStr;
+      container._lastMStr = mStr;
+      container._lastSStr = sStr;
+    }
+
+    function updateDisplay(seconds) {
+      if (seconds < 0) seconds = 0;
+      if (typeof seconds !== 'number' || !isFinite(seconds)) seconds = 0;
+      const animate = timerDigitsInitialized;
+      setFlipTimerFromSeconds(seconds, animate, grantState != null);
+      timerDigitsInitialized = true;
+
+      let phaseClass = 'phase-calm';
+      let animation = '';
+      let glowClass = 'timer-glow-white';
+      if (seconds > 7200) {
+        phaseClass = 'phase-calm';
+      } else if (seconds > 3600) {
+        phaseClass = 'phase-green';
+        glowClass = 'timer-glow-lime';
+      } else if (seconds > 1800) {
+        phaseClass = 'phase-yellow';
+        glowClass = 'timer-glow-yellow';
+      } else if (seconds > 600) {
+        phaseClass = 'warning';
+        animation = 'blockWarnPulse 0.85s ease-in-out infinite';
+        glowClass = 'timer-glow-orange';
+      } else if (seconds > 300) {
+        phaseClass = 'danger';
+        animation = 'blockWarnPulse 0.85s ease-in-out infinite';
+        glowClass = 'timer-glow-red';
+      } else {
+        phaseClass = 'danger-critical';
+        glowClass = 'timer-glow-redcrit';
+      }
+      container.className = phaseClass;
+      container.style.animation = animation;
+      if (marathonCard) marathonCard.className = 'card ' + phaseClass;
+      const row = container.querySelector('.flip-timer-row');
+      if (row) {
+        row.className = 'flip-timer-row ' + glowClass;
+      }
+      syncFooterPhaseStrip(seconds, false);
+    }
+
+    /** Нижняя строка статуса по оставшемуся времени (или режим «время вышло»). */
+    function syncFooterPhaseStrip(seconds, blinkExpired) {
+      const el = document.getElementById('footerPhaseMsg');
+      if (!el) return;
+      if (blinkExpired) {
+        el.textContent = 'ВРЕМЯ ВЫШЛО';
+        el.classList.add('on');
+        el.setAttribute('aria-hidden', 'false');
+        return;
+      }
+      let msg = '';
+      if (seconds > 7200) msg = '';
+      else if (seconds > 3600) msg = 'ОСТАЛОСЬ МЕНЬШЕ 2Х ЧАСОВ';
+      else if (seconds > 1800) msg = 'ОСТАЛОСЬ МЕНЬШЕ ЧАСА!';
+      else if (seconds > 600) msg = 'УЖЕ МЕНЬШЕ 30 МИНУТ!';
+      else if (seconds > 300) msg = 'ПРОДЛИМ СТРИМ?';
+      else if (seconds > 0) msg = 'ВРЕМЯ НА ИСХОДЕ';
+      else msg = '';
+      el.textContent = msg;
+      if (msg) {
+        el.classList.add('on');
+        el.setAttribute('aria-hidden', 'false');
+      } else {
+        el.classList.remove('on');
+        el.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    async function syncRate() {
+      try {
+        const text = (await getFileText('rate.txt')).trim();
+        const el = document.getElementById('rateInfo');
+        el.textContent = text || '—';
+      } catch (e) {
+        document.getElementById('rateInfo').textContent = '—';
+      }
+    }
+
+    async function syncTitle() {
+      try {
+        const text = (await getFileText('title.txt')).trim();
+        const el = document.getElementById('titleInfo');
+        if (!text) {
+          el.textContent = '';
+          el.style.display = 'none';
+        } else {
+          el.textContent = text;
+          el.style.display = 'block';
+        }
+      } catch (e) {
+        const el = document.getElementById('titleInfo');
+        el.textContent = '';
+        el.style.display = 'none';
+      }
+    }
+
+    async function syncTimer() {
+      if (isSyncing) return;
+      isSyncing = true;
+      if (await isBlinking()) {
+        stopGrantAnimation();
+        resetGrantDeferralAndBumpTimer();
+        lastServerSeconds = null;
+        visualSeconds = 0;
+        timerDigitsInitialized = false;
+        updateDisplay(0);
+        container.classList.add('fadeIn');
+        syncFooterPhaseStrip(0, true);
+        isSyncing = false;
+        await syncRate();
+        await syncTitle();
+        return;
+      }
+      container.classList.remove('fadeIn');
+      try {
+        const text = (await getFileText('timer.txt')).trim();
+        if (!text) {
+          stopGrantAnimation();
+          resetGrantDeferralAndBumpTimer();
+          lastServerSeconds = null;
+          isSyncing = false;
+          await syncRate();
+          await syncTitle();
+          return;
+        }
+        const parts = text.split(':');
+        if (parts.length === 3) {
+          const h = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10);
+          const s = parseInt(parts[2], 10);
+          if (!isNaN(h) && !isNaN(m) && !isNaN(s)) {
+            const newSeconds = h * 3600 + m * 60 + s;
+            const prev = lastServerSeconds;
+            if (prev === null) {
+              stopGrantAnimation();
+              resetGrantDeferralAndBumpTimer();
+              visualSeconds = newSeconds;
+              lastServerSeconds = newSeconds;
+              updateDisplay(newSeconds);
+            } else {
+              const delta = newSeconds - prev;
+              lastServerSeconds = newSeconds;
+              if (grantState) {
+                if (grantState.chainReveal && pendingGrantDeltaQueue.length > 0) {
+                  var h0 = pendingGrantDeltaQueue[0];
+                  grantState.to = newSeconds - (pendingHiddenGrantSum() - h0);
+                } else {
+                  grantState.to = newSeconds;
+                }
+              }
+
+              if (delta > 0) {
+                const cur = Math.round(visualSeconds != null ? visualSeconds : prev);
+                if (newSeconds > cur) {
+                  if (donationGrantBarrierCount > 0 || donationAlertActive || donationAlertQueue.length > 0) {
+                    pendingGrantDeltaQueue.push(delta);
+                    var inChain0 = grantState && grantState.chainReveal;
+                    if (!inChain0) {
+                      stopGrantAnimation();
+                      if (grantBumpDecisionTimer) {
+                        clearTimeout(grantBumpDecisionTimer);
+                        grantBumpDecisionTimer = null;
+                      }
+                      pendingGrantBump = null;
+                      visualSeconds = lastServerSeconds - pendingHiddenGrantSum();
+                      updateDisplay(Math.round(visualSeconds));
+                    }
+                  } else {
+                    pendingGrantBump = { prevServer: prev, at: performance.now() };
+                    if (grantBumpDecisionTimer) clearTimeout(grantBumpDecisionTimer);
+                    grantBumpDecisionTimer = setTimeout(function() {
+                      grantBumpDecisionTimer = null;
+                      if (pendingHiddenGrantSum() > 0) return;
+                      if (donationGrantBarrierCount > 0 || donationAlertActive || donationAlertQueue.length > 0) return;
+                      const from = Math.round(visualSeconds != null ? visualSeconds : lastServerSeconds);
+                      const to = lastServerSeconds;
+                      if (to > from) {
+                        grantState = {
+                          from0: from,
+                          to: to,
+                          startT: performance.now(),
+                          durationMs: grantDurationMs(to - from)
+                        };
+                        visualSeconds = from;
+                        kickGrantAnimation();
+                      }
+                      pendingGrantBump = null;
+                    }, MANUAL_GRANT_WAIT_MS);
+                  }
+                }
+              } else if (delta < -1) {
+                resetGrantDeferralAndBumpTimer();
+                stopGrantAnimation();
+                visualSeconds = newSeconds;
+                updateDisplay(newSeconds);
+              } else {
+                if (pendingGrantDeltaQueue.length > 0) {
+                  var inChain1 = grantState && grantState.chainReveal;
+                  if (!inChain1) {
+                    visualSeconds = lastServerSeconds - pendingHiddenGrantSum();
+                    updateDisplay(Math.round(visualSeconds));
+                  }
+                } else if (grantState) {
+                  if (!grantRafId) kickGrantAnimation();
+                } else {
+                  visualSeconds = newSeconds;
+                  updateDisplay(newSeconds);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {}
+      await syncRate();
+      await syncTitle();
+      isSyncing = false;
+    }
+
+    setInterval(syncTimer, 1000);
+
+    let lastDonationAlertId = null;
+    let donationAlertEpoch = 0;
+    const donationAlert = document.getElementById('donationAlert');
+    const donationAlertNick = document.getElementById('donationAlertNick');
+    const donationAlertTime = document.getElementById('donationAlertTime');
+    let donationAlertQueue = [];
+    let donationAlertActive = false;
+
+    function dismissDonationAlerts() {
+      donationAlertEpoch++;
+      donationAlertQueue = [];
+      donationAlertActive = false;
+      donationGrantBarrierCount = 0;
+      lastDonationAlertId = null;
+      if (donationAlert) {
+        donationAlert.style.transition = 'none';
+        donationAlert.style.opacity = '0';
+      }
+      if (donationAlertNick) donationAlertNick.textContent = '';
+      if (donationAlertTime) donationAlertTime.textContent = '';
+      updateLastDonationLine('', '');
+    }
+
+    async function pollDonationAlertFile() {
+      try {
+        const text = await getFileText('donation_alert.txt');
+        const trimmed = text.trim();
+        if (trimmed === '__CLEAR__') {
+          dismissDonationAlerts();
+          fetch('donation_alert.txt', { method: 'PUT', body: '' });
+        } else if (trimmed !== '') {
+          const parts = trimmed.split('|');
+          if (parts.length >= 4) {
+            const alertId = parts[2];
+            const color = parts[3];
+            if (alertId !== lastDonationAlertId) {
+              showDonationAlert(parts[0], parts[1], color);
+              lastDonationAlertId = alertId;
+            }
+          } else if (parts.length >= 3) {
+            const alertId = parts[2];
+            if (alertId !== lastDonationAlertId) {
+              showDonationAlert(parts[0], parts[1], 'black');
+              lastDonationAlertId = alertId;
+            }
+          } else if (parts.length === 2) {
+            showDonationAlert(parts[0], parts[1], 'black');
+          }
+          fetch('donation_alert.txt', { method: 'PUT', body: '' });
+        }
+      } catch (e) {}
+      setTimeout(pollDonationAlertFile, 1000);
+    }
+    pollDonationAlertFile();
+
+    function formatDonationDurationCompact(timeText) {
+      var raw = (timeText || '').trim();
+      if (!raw) return '';
+      if (raw.charAt(0) === '+') raw = raw.slice(1).trim();
+      var segs = raw.split(/\s+/).filter(function(x) { return x.length; });
+      var out = [];
+      for (var i = 0; i < segs.length; i++) {
+        var tok = segs[i];
+        if (/^\d+ч$/.test(tok)) out.push(tok);
+        else if (/^\d+м$/.test(tok)) out.push(tok);
+        else if (/^\d+с$/.test(tok)) out.push(tok);
+        else if (/^\d+ мин$/.test(tok)) out.push(tok.replace(/\s*мин$/, 'м'));
+        else if (/^\d+ сек$/.test(tok)) out.push(tok.replace(/\s*сек$/, 'с'));
+        else out.push(tok);
+      }
+      return out.length ? ('+' + out.join(' ')) : '';
+    }
+
+    function truncateNickLastLine(nick, maxLen) {
+      var t = (nick || '').trim();
+      var m = typeof maxLen === 'number' ? maxLen : 20;
+      if (t.length <= m) return t;
+      return t.slice(0, m) + '...';
+    }
+
+    function updateLastDonationLine(nick, timeText) {
+      var el = document.getElementById('lastDonationLine');
+      if (!el) return;
+      var n = truncateNickLastLine(nick, 20);
+      var dur = formatDonationDurationCompact(timeText);
+      if (!n || !dur) {
+        el.textContent = '';
+        return;
+      }
+      el.textContent = '⏰ ' + n + ' ' + dur;
+    }
+
+    function parseLastDonationFromLogsLine(line) {
+      line = (line || '').trim();
+      if (!line) return null;
+      var stripped = line.replace(/^\[[^\]]+\]\s*/, '');
+      var secMatch = stripped.match(/\(\+([\d.]+)с\)\s*$/);
+      if (!secMatch) return null;
+      var sec = parseFloat(secMatch[1]);
+      if (!isFinite(sec)) return null;
+      var prefix = stripped.slice(0, stripped.length - secMatch[0].length).trim();
+      var sep = ' - ';
+      var idx = prefix.indexOf(sep);
+      if (idx < 0) return null;
+      var username = prefix.slice(0, idx).trim();
+      if (!username) return null;
+      return { nick: username, sec: sec };
+    }
+
+    function secondsToAlertStyleGrant(secFloat) {
+      var sec = Math.max(0, Math.round(Number(secFloat)));
+      var h = Math.floor(sec / 3600);
+      var m = Math.floor((sec % 3600) / 60);
+      var s = sec % 60;
+      var parts = [];
+      if (h > 0) parts.push(h + 'ч');
+      if (m > 0) parts.push(m + 'м');
+      if (s > 0) parts.push(s + 'с');
+      return '+' + (parts.length ? parts.join(' ') : '0с');
+    }
+
+    async function syncLastDonationFromLogs() {
+      try {
+        var text = await getFileText('logs.txt');
+        var lines = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+        if (!lines.length) {
+          updateLastDonationLine('', '');
+          return;
+        }
+        var parsed = parseLastDonationFromLogsLine(lines[lines.length - 1]);
+        if (!parsed) return;
+        updateLastDonationLine(parsed.nick, secondsToAlertStyleGrant(parsed.sec));
+      } catch (e) {}
+    }
+
+    setInterval(syncLastDonationFromLogs, 2000);
+
+    function showDonationAlert(nick, timeText, color) {
+      if (pendingGrantBump && (performance.now() - pendingGrantBump.at) < 3000) {
+        if (grantBumpDecisionTimer) {
+          clearTimeout(grantBumpDecisionTimer);
+          grantBumpDecisionTimer = null;
+        }
+        const bumpDelta = lastServerSeconds != null ? lastServerSeconds - pendingGrantBump.prevServer : 0;
+        if (bumpDelta > 0) {
+          pendingGrantDeltaQueue.push(bumpDelta);
+          if (lastServerSeconds != null && !(grantState && grantState.chainReveal)) {
+            visualSeconds = lastServerSeconds - pendingHiddenGrantSum();
+            updateDisplay(Math.round(visualSeconds));
+          }
+        }
+        pendingGrantBump = null;
+      }
+      donationAlertQueue.push({ nick: nick, timeText: timeText, color: color });
+      updateLastDonationLine(nick, timeText);
+      if (!donationAlertActive) processDonationAlertQueue();
+    }
+
+    function setDonationAlertColor(color) {
+      const colorMap = {
+        black: '#1a1a1e',
+        blue: '#0a6a8a',
+        purple: '#5a1080',
+        green: '#0a6a22',
+        red: '#8a1010'
+      };
+      donationAlert.style.backgroundColor = colorMap[color] || colorMap.black;
+    }
+
+    function processDonationAlertQueue() {
+      if (donationAlertQueue.length === 0) {
+        donationAlertActive = false;
+        if (!grantState && pendingHiddenGrantSum() > 0 && donationGrantBarrierCount === 0) {
+          beginGrantRevealForLastClosedAlert();
+        }
+        return;
+      }
+      const epoch = donationAlertEpoch;
+      donationAlertActive = true;
+      donationGrantBarrierCount++;
+      const item = donationAlertQueue.shift();
+      donationAlertNick.textContent = item.nick;
+      donationAlertTime.textContent = item.timeText;
+      setDonationAlertColor(item.color);
+
+      const wrap = document.getElementById('timerWrap');
+      const rect = wrap.getBoundingClientRect();
+      donationAlert.style.maxWidth = rect.width + 'px';
+
+      let fontSize = 1.35;
+      donationAlertNick.style.fontSize = fontSize + 'rem';
+      donationAlertNick.style.whiteSpace = 'nowrap';
+      donationAlertNick.style.overflow = 'hidden';
+      donationAlertNick.style.textOverflow = 'ellipsis';
+      setTimeout(function() {
+        if (epoch !== donationAlertEpoch) return;
+        while (donationAlertNick.scrollWidth > rect.width - 8 && fontSize > 0.75) {
+          fontSize -= 0.05;
+          donationAlertNick.style.fontSize = fontSize + 'rem';
+        }
+      }, 10);
+
+      donationAlert.style.transition = 'none';
+      donationAlert.style.opacity = '1';
+      donationAlert.style.transform = 'translate(-50%,-50%) scale(0.02)';
+      setTimeout(function() {
+        if (epoch !== donationAlertEpoch) return;
+        donationAlert.style.transform = 'translate(-50%,-50%) scale(1.08)';
+        setTimeout(function() {
+          if (epoch !== donationAlertEpoch) return;
+          donationAlert.style.transform = 'translate(-50%,-50%) scale(0.96)';
+          setTimeout(function() {
+            if (epoch !== donationAlertEpoch) return;
+            donationAlert.style.transform = 'translate(-50%,-50%) scale(1)';
+          }, 90);
+        }, 90);
+      }, 40);
+
+      setTimeout(function() {
+        if (epoch !== donationAlertEpoch) return;
+        donationAlert.style.transition = 'opacity 2s, transform 2s';
+        donationAlert.style.opacity = '0';
+        donationAlert.style.transform = 'translate(-50%,-50%) scale(0.96)';
+        setTimeout(function() {
+          if (epoch !== donationAlertEpoch) return;
+          donationGrantBarrierCount--;
+          donationAlertActive = false;
+          beginGrantRevealForLastClosedAlert();
+        }, DONATION_ALERT_FADE_MS);
+      }, DONATION_ALERT_VISIBLE_MS);
+    }
+
+    syncLastDonationFromLogs();
+    syncTimer();
+  </script>
+</body>
+</html>

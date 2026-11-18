@@ -1,0 +1,390 @@
+/* Donate Timer control panel. Colors come from StreamKit+ /data/styles.css variables. */
+
+.App.dt-app {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: 16px;
+  overflow-y: auto;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.dt-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-panel);
+  padding: 14px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.dt-card h2 {
+  margin: 0 0 10px;
+  font-size: var(--font-size-lg, 16px);
+}
+
+.dt-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.dt-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dt-timer {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+
+.dt-timer--blink {
+  color: #ff4d4d;
+  animation: dt-blink 1s steps(2, start) infinite;
+}
+
+@keyframes dt-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.dt-hero-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dt-hero-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dt-hero-actions button {
+  min-width: 110px;
+  font-size: var(--font-size-md, 14px);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.dt-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: var(--font-size-sm, 12px);
+}
+
+.dt-badge[data-status='running'] {
+  border-color: #2fbf71;
+  color: #2fbf71;
+}
+
+.dt-badge[data-status='paused'] {
+  border-color: #e0a526;
+  color: #e0a526;
+}
+
+.dt-blink {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.dt-muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm, 12px);
+}
+
+.dt-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm, 12px);
+  line-height: 1.4;
+}
+
+.dt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .dt-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .dt-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dt-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.dt-form--dirty button[type='submit'] {
+  box-shadow: 0 0 0 2px var(--btn-primary, #6c5ce7);
+}
+
+.dt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-size-sm, 12px);
+  min-width: 0;
+}
+
+.dt-field + .dt-field {
+  margin-top: 8px;
+}
+
+.dt-form .dt-field + .dt-field,
+.dt-pair .dt-field + .dt-field {
+  margin-top: 0;
+}
+
+.dt-field input,
+.dt-field select,
+.dt-row input,
+.dt-row select {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.dt-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dt-row > input[type='text'],
+.dt-row > input[type='number'],
+.dt-row > input[type='datetime-local'] {
+  flex: 1 1 120px;
+}
+
+.dt-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dt-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-sm, 12px);
+  cursor: pointer;
+}
+
+.dt-hms {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dt-hms input {
+  width: 64px;
+}
+
+.dt-quick {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.dt-quick button {
+  padding-left: 0;
+  padding-right: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.dt-quick .dt-plus {
+  color: #2fbf71;
+}
+
+.dt-quick .dt-minus {
+  color: #ff6b6b;
+}
+
+.dt-danger {
+  color: #ff6b6b;
+}
+
+.dt-swatch span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+.dt-swatch--blue span::before {
+  background: #0a6a8a;
+}
+
+.dt-swatch--purple span::before {
+  background: #5a1080;
+}
+
+.dt-swatch--green span::before {
+  background: #0a6a22;
+}
+
+.dt-swatch--red span::before {
+  background: #8a1010;
+}
+
+.dt-progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-display, rgba(255, 255, 255, 0.08));
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.dt-progress i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--btn-primary, #6c5ce7);
+  transition: width 0.4s ease;
+}
+
+.dt-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dt-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-display, rgba(255, 255, 255, 0.04));
+  font-size: var(--font-size-sm, 12px);
+  color: var(--text-muted);
+}
+
+.dt-stats b {
+  color: var(--text);
+  font-size: var(--font-size-md, 14px);
+  overflow-wrap: anywhere;
+}
+
+.dt-bonus-status {
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.dt-bonus-status[data-mode='live'] {
+  color: #2fbf71;
+}
+
+.dt-bonus-status[data-mode='cooldown'] {
+  color: #e0a526;
+}
+
+.dt-bonus-status[data-mode='off'] {
+  color: var(--text-muted);
+}
+
+.dt-journal-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dt-journal-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--bg-display, rgba(255, 255, 255, 0.04));
+  overflow-wrap: anywhere;
+}
+
+.dt-widgets {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dt-widgets li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-size-sm, 12px);
+}
+
+.dt-widgets input {
+  flex: 1 1 140px;
+  font-size: 11px;
+}
+
+.dt-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10;
+  padding: 10px 14px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dt-toast--error {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.dt-toast--ok {
+  border-color: #2fbf71;
+}
