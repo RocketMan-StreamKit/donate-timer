@@ -27,7 +27,7 @@ import {
 import { rateText } from './format';
 import { goalProgress, marathonStats, moneyRows, onAirSeconds } from './stats';
 import { db } from './store';
-import { currentSnapshot, widgetUrls } from './widgets';
+import { currentSnapshot, gtaWidgetUrls, widgetUrls } from './widgets';
 
 /** Journal rows returned to the panel (newest first). */
 const PANEL_JOURNAL_LIMIT = 300;
@@ -94,6 +94,7 @@ const panelState = () => {
     journal: db.donations.slice(-PANEL_JOURNAL_LIMIT).reverse(),
     widgetsCleared: db.widgetExcludedIds.length,
     widgets: widgetUrls(),
+    gtaWidgets: gtaWidgetUrls(),
   };
 };
 

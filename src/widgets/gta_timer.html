@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<script src="bridge.js"></script>
+<meta charset="utf-8">
+<title>GTA 6 — таймер</title>
+<link rel="stylesheet" href="gta.css">
+<style>
+  /* Room around the 480×45 plate for the glow and the falling donation toast. Recommended source: 520×120. */
+  body { padding: 20px; width: 480px; height: 80px; }
+
+  .plate {
+    --bar: linear-gradient(90deg, #ff8a3d, #ff3d8b);
+    position: relative;
+    width: 480px;
+    height: 45px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    background: rgba(13, 13, 16, var(--bg-a));
+    border: 1px solid #2a2a30;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0 12px 0 14px;
+    opacity: 0;
+    transition: opacity 0.4s ease, background 0.4s ease, border-color 0.4s ease;
+  }
+  .plate.ready { opacity: 1; }
+  .plate.gold {
+    --bar: linear-gradient(90deg, #ffb020, #ff3d8b);
+    background: rgba(16, 13, 7, var(--bg-a));
+    border: 1.5px solid #ffb020;
+    box-shadow: 0 0 8px rgba(255, 176, 32, 0.3);
+    animation: goldshine 2.4s ease-in-out infinite;
+  }
+  .plate.crit {
+    --bar: #ff3d5a;
+    background: rgba(22, 10, 13, var(--bg-a));
+    border: 1.5px solid #ff3d5a;
+    box-shadow: 0 0 6px rgba(255, 61, 90, 0.35);
+    animation: critpulse 1s ease-in-out infinite;
+  }
+  .plate.boom { animation: glowpulse 1.4s ease-in-out 3 !important; }
+
+  .fx { position: absolute; inset: 0; overflow: hidden; border-radius: 4px; pointer-events: none; }
+  .flash { position: absolute; inset: 0; background: var(--bar); opacity: 0; }
+  .plate.boom .flash { animation: gtaflash 1.4s ease-in-out 3; }
+  .particles { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; }
+  .plate.boom .particles { opacity: 1; }
+  .particles i { position: absolute; bottom: -4px; border-radius: 50%; }
+  .track { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: #1c1c22; }
+  .bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--bar); transition: width 0.3s linear; }
+
+  .title { position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .title div {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1.1;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .title[data-lines='1'] div { font-size: 17px; }
+  .title[data-lines='2'] div { font-size: 15px; }
+  .title[data-lines='3'] div { font-size: 11px; letter-spacing: 1.5px; line-height: 1.12; }
+
+  .time-wrap { position: relative; z-index: 2; display: flex; justify-content: center; }
+  .time {
+    position: relative;
+    top: -1px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .plate.crit .time { color: #ff6a8a; animation: timepulse 1s ease-in-out infinite; }
+  .plate.boom .time,
+  .plate.boom .title,
+  .plate.boom .rate { animation: timedim 4.2s ease-in-out forwards; }
+  .plate.final .time { color: #6c6c78; animation: none; }
+
+  .rate {
+    position: relative;
+    z-index: 2;
+    justify-self: end;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    white-space: nowrap;
+    text-align: right;
+    font-size: 15px;
+    line-height: 1.1;
+  }
+  .rate .l1 { color: #e9e9ef; }
+  .rate .eq { color: #b9b9c4; }
+  .rate .l2 { color: #ff6aa6; }
+  .plate.gold .rate .l1 { color: #ffb020; }
+  .plate.final .rate .l1 { color: #b9b9c4; }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: #1a1204;
+    background: #ffb020;
+    border-radius: 3px;
+    padding: 2px 4px;
+    line-height: 1;
+    vertical-align: 2px;
+    margin-right: 4px;
+  }
+  .old { color: #8d8d99; font-weight: 500; text-decoration: line-through; font-size: 11px; }
+
+  .toast {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.65);
+  }
+  .toast .nick { color: #fff; font-size: 19px; }
+  .toast .amt { color: #ffb46b; font-size: 19px; }
+  .plate.gold .toast .amt { color: #ffb020; }
+  /* Long nick + amount: two lines (nick above, amount below). */
+  .toast.stacked { flex-direction: column; gap: 2px; }
+  .toast.stacked .nick { font-size: 18px; max-width: 440px; overflow: hidden; text-overflow: ellipsis; }
+  .toast.stacked .amt { font-size: 15px; }
+  .toast.play { animation: toastdown 4.2s ease-out forwards; }
+</style>
+</head>
+<body>
+  <div class="plate" id="plate" role="timer" aria-label="Таймер марафона">
+    <div class="fx">
+      <div class="flash"></div>
+      <div class="particles" id="particles"></div>
+      <div class="track"></div>
+      <div class="bar" id="bar"></div>
+    </div>
+    <div class="title" id="title"></div>
+    <div class="time-wrap"><div class="time" id="time">0:00:00</div></div>
+    <div class="rate"><div class="l1" id="l1"></div><div class="l2" id="l2"></div></div>
+    <div class="toast" id="toast"><span class="nick" id="nick"></span><span class="amt" id="amt"></span></div>
+  </div>
+<script>
+(function () {
+  'use strict';
+  var plate = document.getElementById('plate');
+  var timeEl = document.getElementById('time');
+  var barEl = document.getElementById('bar');
+  var titleEl = document.getElementById('title');
+  var l1 = document.getElementById('l1');
+  var l2 = document.getElementById('l2');
+  var toast = document.getElementById('toast');
+  var nickEl = document.getElementById('nick');
+  var amtEl = document.getElementById('amt');
+  var particlesEl = document.getElementById('particles');
+
+  var NORMAL_COLORS = ['#ff8a3d', '#ff3d8b', '#ffc27a', '#ff6aa6'];
+  var GOLD_COLORS = ['#ffb020', '#ffd27a', '#ff5fa8', '#ffffff'];
+  var TOAST_MS = 4200;
+
+  var meta = null;
+  var shown = null;        // seconds on screen
+  var grant = null;        // { from, to, start }
+  var seenAlert = null;    // last alert id handled
+  var firstSnapshot = true;
+  var queue = [];
+  var playing = false;
+  var titleKey = '';
+  var particleKey = '';
+
+  /** h:mm:ss like the reference (hours not padded). */
+  function fmt(sec) {
+    var s = Math.max(0, Math.floor(sec));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+    return h + ':' + String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+  }
+
+  /** Russian plural. */
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b > 1 && b < 5) return few;
+    if (b === 1) return one;
+    return many;
+  }
+
+  /** "+5 минут", "+1 мин 30 сек", "+45 секунд". */
+  function grantText(sec) {
+    var s = Math.max(0, Math.round(sec));
+    if (s < 60) return '+' + s + ' ' + plural(s, 'секунда', 'секунды', 'секунд');
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+    if (!r && !m) return '+' + h + ' ' + plural(h, 'час', 'часа', 'часов');
+    if (!r && !h) return '+' + m + ' ' + plural(m, 'минута', 'минуты', 'минут');
+    var parts = [];
+    if (h) parts.push(h + ' ч');
+    if (m) parts.push(m + ' мин');
+    if (r) parts.push(r + ' сек');
+    return '+' + parts.join(' ');
+  }
+
+  /** Number without trailing zeros, grouped. */
+  function num(v) {
+    var r = Math.round(v * 100) / 100;
+    return String(r).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  /** Seconds as "+N сек" / "+M мин" / "+M мин S сек". */
+  function secLabel(sec) {
+    var s = Math.round(sec * 10) / 10;
+    if (s < 60) return '+' + num(s) + ' сек';
+    var m = Math.floor(s / 60), r = Math.round(s - m * 60);
+    return '+' + m + ' мин' + (r ? ' ' + r + ' сек' : '');
+  }
+
+  function escapeHtml(t) {
+    return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+  }
+
+  function renderTitle(lines) {
+    var key = lines.join('\n');
+    if (key === titleKey) return;
+    titleKey = key;
+    titleEl.dataset.lines = String(Math.max(1, Math.min(3, lines.length)));
+    titleEl.innerHTML = lines.map(function (l) { return '<div>' + escapeHtml(l) + '</div>'; }).join('');
+  }
+
+  function renderRate(g, final) {
+    if (final) {
+      l1.textContent = 'марафон';
+      l2.textContent = 'завершён';
+      return;
+    }
+    var unit = escapeHtml(g.unit);
+    var mult = Math.round(g.multiplier * 100) / 100;
+    var badge = g.bonus ? '<span class="badge">×' + num(mult) + '</span>' : '';
+    if (g.mode === 'amount_per_sec') {
+      var now = g.rate * 60, base = g.baseRate * 60;
+      l1.innerHTML = badge + (g.bonus ? '<span class="old">' + num(base) + '</span> ' : '') + num(now) + ' ' + unit + ' <span class="eq">=</span>';
+      l2.textContent = '+1 минута';
+    } else {
+      l1.innerHTML = badge + '1 ' + unit + ' <span class="eq">=</span>';
+      l2.innerHTML = (g.bonus ? '<span class="old">' + escapeHtml(secLabel(g.baseRate)) + '</span> ' : '') + escapeHtml(secLabel(g.rate));
+    }
+  }
+
+  function renderParticles(gold) {
+    var key = gold ? 'g' : 'n';
+    if (key === particleKey) return;
+    particleKey = key;
+    var colors = gold ? GOLD_COLORS : NORMAL_COLORS;
+    var html = '';
+    for (var i = 0; i < 22; i++) {
+      var c = colors[i % colors.length];
+      var size = 2 + (i * 5) % 3;
+      html += '<i style="left:' + ((i * 37 + 11) % 100) + '%;width:' + size + 'px;height:' + size + 'px;background:' + c +
+        ';box-shadow:0 0 5px ' + c + ';animation:rise ' + (1.6 + ((i * 3) % 12) / 10) + 's linear ' + (((i * 7) % 20) / 10) + 's infinite"></i>';
+    }
+    particlesEl.innerHTML = html;
+  }
+
+  function paintTime(sec) {
+    shown = sec;
+    timeEl.textContent = fmt(sec);
+    // Full width = session bank (start + all added time); colored part = time left.
+    var bank = meta ? Math.max(1, meta.timer.bank, sec) : 1;
+    barEl.style.width = Math.max(0, Math.min(100, (sec / bank) * 100)).toFixed(2) + '%';
+  }
+
+  /** Smooth count-up after a donation (cubic ease-out, 1.4 s). */
+  function stepGrant() {
+    if (!grant) return;
+    var k = Math.min(1, (performance.now() - grant.start) / 1400);
+    var e = 1 - Math.pow(1 - k, 3);
+    paintTime(Math.round(grant.from + (grant.to - grant.from) * e));
+    if (k < 1) requestAnimationFrame(stepGrant);
+    else grant = null;
+  }
+
+  function playNext() {
+    if (playing || !queue.length) return;
+    var a = queue.shift();
+    playing = true;
+    nickEl.textContent = a.nick;
+    amtEl.textContent = grantText(a.seconds);
+    toast.classList.remove('stacked', 'play');
+    // Two lines when nick + amount (+ gap) do not fit on the plate in one row.
+    var oneRow = nickEl.getBoundingClientRect().width + amtEl.getBoundingClientRect().width + 8;
+    toast.classList.toggle('stacked', oneRow > plate.clientWidth - 24);
+    void toast.offsetWidth;
+    toast.classList.add('play');
+    plate.classList.remove('boom');
+    void plate.offsetWidth;
+    plate.classList.add('boom');
+    setTimeout(function () {
+      plate.classList.remove('boom');
+      toast.classList.remove('play');
+      playing = false;
+      playNext();
+    }, TOAST_MS + 150);
+  }
+
+  function apply(snapshot) {
+    meta = snapshot && snapshot.meta;
+    if (!meta || !meta.timer || !meta.gta) return;
+    var g = meta.gta;
+    var t = meta.timer;
+    if (g.bgAlpha && typeof g.bgAlpha.timer === 'number') document.documentElement.style.setProperty('--bg-a', String(g.bgAlpha.timer));
+    var remaining = t.blinking ? 0 : t.remaining;
+    var final = remaining <= 0;
+    var crit = !final && g.criticalSeconds > 0 && remaining < g.criticalSeconds;
+
+    plate.classList.toggle('gold', g.bonus && !final);
+    plate.classList.toggle('crit', crit);
+    plate.classList.toggle('final', final);
+    renderTitle(g.title && g.title.length ? g.title : ['Марафон']);
+    renderRate(g, final);
+    renderParticles(g.bonus && !final);
+
+    var alert = meta.alert;
+    var isNew = alert && !alert.clear && alert.id !== seenAlert;
+    if (alert && alert.clear) {
+      queue = [];
+    } else if (isNew) {
+      seenAlert = alert.id;
+      // A freshly opened source does not replay an old alert.
+      if (!firstSnapshot || Date.now() - alert.at < 3000) {
+        queue.push({ nick: alert.nick, seconds: alert.seconds });
+        playNext();
+      }
+    }
+
+    if (shown === null) {
+      paintTime(remaining);
+    } else if (remaining > shown + 1) {
+      grant = { from: shown, to: remaining, start: performance.now() };
+      requestAnimationFrame(stepGrant);
+    } else if (grant) {
+      grant.to = remaining;
+    } else {
+      paintTime(remaining);
+    }
+    firstSnapshot = false;
+    plate.classList.add('ready');
+  }
+
+  DonateTimerBridge.on(apply);
+})();
+</script>
+</body>
+</html>

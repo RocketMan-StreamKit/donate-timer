@@ -41,6 +41,8 @@ export type PanelState = {
   journal: JournalRow[];
   widgetsCleared: number;
   widgets: Record<string, string>;
+  /** GTA 6 themed widget URLs. */
+  gtaWidgets: Record<string, string>;
 };
 
 /** A mounted UI piece that re-renders from state. */

@@ -723,6 +723,7 @@
   line-height: 1.4;
 }
 
+.dt-app textarea,
 .dt-app input[type='text'],
 .dt-app input[type='url'],
 .dt-app input[type='number'],
@@ -740,6 +741,13 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+.dt-app textarea {
+  min-height: 0;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.dt-app textarea:focus,
 .dt-app input:focus,
 .dt-app select:focus {
   outline: none;
@@ -1651,6 +1659,41 @@
   margin: 4px 0 0;
   color: var(--dt-muted);
   font-size: 12px;
+}
+
+.dt-widget-size {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--dt-panel);
+  color: var(--dt-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dt-gta {
+  border-color: color-mix(in srgb, #ff3d8b 45%, var(--dt-border));
+  background:
+    radial-gradient(500px 160px at 0% 0%, rgba(255, 61, 139, 0.12), transparent 70%),
+    radial-gradient(400px 160px at 100% 0%, rgba(255, 138, 61, 0.1), transparent 70%),
+    var(--dt-panel);
+}
+
+.dt-gta .dt-card-icon {
+  background: linear-gradient(135deg, #ff8a3d, #ff3d8b);
+}
+
+.dt-gta-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.dt-gta-wide {
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 
 .dt-widget input {

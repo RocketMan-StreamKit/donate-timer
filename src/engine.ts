@@ -96,7 +96,7 @@ export const alertText = () => {
 const showAlert = (nick: string, seconds: number, color: AlertColor) => {
   const at = Date.now();
   clearSignalUntil = 0;
-  alert = { id: String(at), nick, text: grantText(seconds), color, at };
+  alert = { id: String(at), nick, text: grantText(seconds), seconds: Math.round(seconds), color, at };
 };
 
 /**
@@ -106,6 +106,18 @@ const showAlert = (nick: string, seconds: number, color: AlertColor) => {
 const signalClearAlert = () => {
   alert = null;
   clearSignalUntil = Date.now() + CLEAR_SIGNAL_MS;
+};
+
+/**
+ * Current alert for structured widgets (GTA theme), or null when expired.
+ * @returns Alert data.
+ * @example currentAlert()?.nick;
+ */
+export const currentAlert = () => {
+  const now = Date.now();
+  if (now < clearSignalUntil) return { clear: true as const };
+  if (!alert || now - alert.at > ALERT_TTL_MS) return null;
+  return { id: alert.id, nick: alert.nick, seconds: alert.seconds, color: alert.color, at: alert.at };
 };
 
 /**
@@ -195,11 +207,15 @@ const rememberId = (id: string) => {
 
 /**
  * Adds seconds to the timer, never going below zero.
+ * Added time also grows the session bank (progress bar scale); subtracted time only lowers the remainder.
  * @param seconds Delta.
+ * @param undo Taking back an earlier grant: the bank shrinks by the same amount.
  * @example shiftTimer(-60);
  */
-const shiftTimer = (seconds: number) => {
+const shiftTimer = (seconds: number, undo = false) => {
   db.timer.remaining = Math.max(0, db.timer.remaining + seconds);
+  if (seconds > 0 || undo) db.timer.bank += seconds;
+  db.timer.bank = Math.max(1, db.timer.bank, db.timer.remaining);
 };
 
 /**
@@ -436,6 +452,7 @@ export const resetTimer = (): ActionResult => {
   }
   db.timer.status = 'stopped';
   db.timer.remaining = db.settings.initialSeconds;
+  db.timer.bank = Math.max(1, db.timer.remaining);
   flush();
   changed();
   return ok();
@@ -450,6 +467,7 @@ export const resetTimer = (): ActionResult => {
 export const setRemaining = (seconds: number): ActionResult => {
   if (!Number.isFinite(seconds) || seconds < 0) return fail('invalidTime');
   db.timer.remaining = Math.floor(seconds);
+  db.timer.bank = Math.max(1, db.timer.remaining);
   flush();
   changed();
   return ok();
@@ -530,7 +548,7 @@ export const addAmountWithName = async (
 export const removeLastDonation = (): ActionResult => {
   const removed = db.donations.pop();
   if (!removed) return fail('journalEmpty');
-  shiftTimer(-removed.seconds);
+  shiftTimer(-removed.seconds, true);
   if (removed.bonusCounted) commitBonus(subtractBank(db.bonus, removed.amount));
   db.widgetExcludedIds = db.widgetExcludedIds.filter(id => id !== removed.id);
   flush();

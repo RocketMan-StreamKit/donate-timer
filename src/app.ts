@@ -40,7 +40,7 @@ const build = () => {
   const marathon = marathonTab();
   const bonus = bonusTab();
   const widgets = widgetsTab();
-  components = [head, onb, ...control, ...setup, ...marathon, ...bonus, widgets];
+  components = [head, onb, ...control, ...setup, ...marathon, ...bonus, ...widgets];
 
   const columns = (items: Component[]) => masonry(items.map(c => c.el), 360);
   const { bar, panels } = tabs([
@@ -58,7 +58,7 @@ const build = () => {
     { id: 'setup', icon: '💱', label: t('tabSetup'), content: [columns(setup)] },
     { id: 'marathon', icon: '🏁', label: t('tabMarathon'), content: [columns(marathon)] },
     { id: 'bonus', icon: '⚡', label: t('tabBonus'), content: [columns(bonus)] },
-    { id: 'widgets', icon: '📺', label: t('tabWidgets'), content: [widgets.el] },
+    { id: 'widgets', icon: '📺', label: t('tabWidgets'), content: widgets.map(c => c.el) },
   ]);
 
   root.replaceChildren(h('div', { class: 'dt-sticky' }, [head.el, bar]), panels);

@@ -3,9 +3,9 @@
  * files; `widgets/bridge.js` serves those "files" from the snapshot built here.
  */
 import { formatSecondsLabel, isActive, nowSec, secondsPerUnit } from './bonus';
-import { SOCKET_PATH, WIDGET_LOG_LINES, WIDGETS } from './constants';
+import { GTA_WIDGETS, SOCKET_PATH, WIDGET_LOG_LINES, WIDGETS } from './constants';
 import { baseCurrency } from './currency';
-import { alertText, isBlinking, rateInEffect, takeTimeGoalForce } from './engine';
+import { alertText, currentAlert, isBlinking, rateInEffect, takeTimeGoalForce } from './engine';
 import { amountText, currencySymbol, hms, localStamp, rateText } from './format';
 import { effectiveAccent, goalPayload, onAirSeconds, timeGoalText, widgetRows, widgetTotals } from './stats';
 import { db } from './store';
@@ -24,6 +24,69 @@ export type WidgetSnapshot = {
     sounds: { bomb: boolean; openUrl: string; volume: number };
     /** Server time (ms epoch) for clock drift checks. */
     serverTime: number;
+    /** Timer state for structured widgets. */
+    timer: { remaining: number; running: boolean; blinking: boolean; bank: number };
+    /** Latest donation alert (`null` when none, `{ clear: true }` to dismiss). */
+    alert: ReturnType<typeof currentAlert>;
+    /** Top-6 by amount for the marathon (visible rows only). */
+    top: { name: string; amount: number }[];
+    /** GTA 6 theme data. */
+    gta: GtaMeta;
+  };
+};
+
+/** Data for the GTA 6 widgets. */
+export type GtaMeta = {
+  /** Title lines on the left of the timer plate. */
+  title: string[];
+  /** Critical mode threshold, seconds (0 = off). */
+  criticalSeconds: number;
+  /** Top-6 rotation timings, seconds. */
+  topSlideSeconds: number;
+  /** Top-6 cross-fade duration, seconds. */
+  topFadeSeconds: number;
+  /** Dark background fill per widget, 0..1. */
+  bgAlpha: { timer: number; topRotate: number; topList: number };
+  /** Currency label for rate lines (`руб` for RUB). */
+  unit: string;
+  /** Rate mode. */
+  mode: 'amount_per_sec' | 'sec_per_amount';
+  /** Base rate. */
+  baseRate: number;
+  /** Rate in effect now (bonus aware). */
+  rate: number;
+  /** Bonus window is live. */
+  bonus: boolean;
+  /** Bonus multiplier (1 when off). */
+  multiplier: number;
+};
+
+/**
+ * GTA widget data.
+ * @returns Theme meta.
+ * @example gtaMeta().title; // ['Марафон', 'GTA 6']
+ */
+const gtaMeta = (): GtaMeta => {
+  const g = db.settings.gta;
+  const code = baseCurrency();
+  const live = db.settings.bonus.enabled && isActive(db.bonus, nowSec());
+  const percent = live ? db.bonus.lockedPercent ?? 0 : 0;
+  return {
+    title: g.title.split('\n'),
+    criticalSeconds: Math.round(g.criticalMinutes * 60),
+    topSlideSeconds: g.topSlideSeconds,
+    topFadeSeconds: g.topFadeSeconds,
+    bgAlpha: {
+      timer: g.timerBgOpacity / 100,
+      topRotate: g.topRotateBgOpacity / 100,
+      topList: g.topListBgOpacity / 100,
+    },
+    unit: code === 'RUB' ? 'руб' : currencySymbol(code),
+    mode: db.settings.rateMode,
+    baseRate: db.settings.rate,
+    rate: rateInEffect(),
+    bonus: live,
+    multiplier: 1 + percent / 100,
   };
 };
 
@@ -101,6 +164,15 @@ export const buildSnapshot = (): WidgetSnapshot => {
         volume: db.settings.bonus.volume,
       },
       serverTime: Date.now(),
+      timer: {
+        remaining: Math.floor(db.timer.remaining),
+        running: db.timer.status === 'running',
+        blinking,
+        bank: Math.max(1, Math.floor(db.timer.bank)),
+      },
+      alert: currentAlert(),
+      top: totals.top,
+      gta: gtaMeta(),
     },
   };
 };
@@ -142,6 +214,19 @@ export const widgetUrls = () =>
       `http://localhost:${WEB_SERVER_PORT}/addon_static/${encodeURIComponent(data.id)}/widgets/${id}.html?token=${encodeURIComponent(data.token)}`,
     ])
   ) as Record<(typeof WIDGETS)[number], string>;
+
+/**
+ * Absolute URLs of the GTA 6 themed widgets.
+ * @returns Map of widget id to URL.
+ * @example gtaWidgetUrls().gta_timer;
+ */
+export const gtaWidgetUrls = () =>
+  Object.fromEntries(
+    GTA_WIDGETS.map(id => [
+      id,
+      `http://localhost:${WEB_SERVER_PORT}/addon_static/${encodeURIComponent(data.id)}/widgets/${id}.html?token=${encodeURIComponent(data.token)}`,
+    ])
+  ) as Record<(typeof GTA_WIDGETS)[number], string>;
 
 /**
  * Registers the widget socket namespace and the HTTP fallback endpoint.

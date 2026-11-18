@@ -120,6 +120,30 @@ export const textField = (opts: FieldBase & { placeholder?: Dyn; maxLength?: num
 };
 
 /**
+ * Multi-line text input.
+ * @param opts Options.
+ * @returns Field.
+ * @example textareaField({ label: 'Title', rows: 2 });
+ */
+export const textareaField = (opts: FieldBase & { placeholder?: Dyn; maxLength?: number; rows?: number }): Field => {
+  const input = h('textarea', { attrs: { rows: opts.rows ?? 2, maxlength: opts.maxLength ?? 200 } });
+  const base = wrap(opts, input);
+  const refresh = () => {
+    base.refresh();
+    input.placeholder = dyn(opts.placeholder);
+  };
+  refresh();
+  return {
+    el: base.el,
+    get: () => input.value,
+    set: value => {
+      input.value = value === undefined || value === null ? '' : String(value);
+    },
+    refresh,
+  };
+};
+
+/**
  * On/off switch with a label on the right.
  * @param opts Options.
  * @returns Field.

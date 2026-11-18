@@ -88,6 +88,11 @@ export const sanitizeSettings = (
   const mar = (r.marathon ?? {}) as Record<string, unknown>;
   const tg = (r.timeGoal ?? {}) as Record<string, unknown>;
   const bo = (r.bonus ?? {}) as Record<string, unknown>;
+  const gta = (r.gta ?? {}) as Record<string, unknown>;
+  const gtaTitle =
+    typeof gta.title === 'string'
+      ? gta.title.replace(/\r/g, '').split('\n').map(line => line.trim()).filter(Boolean).slice(0, 3).join('\n').slice(0, 120)
+      : base.gta.title;
   const accent = MARATHON_ACCENTS.includes(mar.accent as MarathonAccent)
     ? (mar.accent as MarathonAccent)
     : base.marathon.accent;
@@ -153,6 +158,15 @@ export const sanitizeSettings = (
         : base.bonus.openSoundUrl,
       volume: Math.round(clamp(bo.volume, base.bonus.volume, 0, 100)),
     },
+    gta: {
+      title: gtaTitle,
+      criticalMinutes: clamp(gta.criticalMinutes, base.gta.criticalMinutes, 0, 1440),
+      topSlideSeconds: clamp(gta.topSlideSeconds, base.gta.topSlideSeconds, 1, 600),
+      topFadeSeconds: clamp(gta.topFadeSeconds, base.gta.topFadeSeconds, 0, 10),
+      timerBgOpacity: Math.round(clamp(gta.timerBgOpacity, base.gta.timerBgOpacity, 0, 100)),
+      topRotateBgOpacity: Math.round(clamp(gta.topRotateBgOpacity, base.gta.topRotateBgOpacity, 0, 100)),
+      topListBgOpacity: Math.round(clamp(gta.topListBgOpacity, base.gta.topListBgOpacity, 0, 100)),
+    },
   };
 };
 
@@ -212,10 +226,12 @@ const sanitizeBonusState = (raw: unknown): BonusState => {
 const sanitizeTimer = (raw: unknown, initial: number): TimerState => {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const status = r.status === 'running' || r.status === 'paused' ? 'paused' : 'stopped';
+  const remaining = Math.max(0, num(r.remaining, initial));
   return {
-    remaining: Math.max(0, num(r.remaining, initial)),
+    remaining,
     status,
     blinkUntil: 0,
+    bank: Math.max(remaining, num(r.bank, num(r.peak, 0)), 1),
   };
 };
 

@@ -93,6 +93,7 @@ export const widgetTotals = () => {
   });
   return {
     total,
+    top: top.map(([name, amount]) => ({ name, amount: Math.round(amount * 100) / 100 })),
     inline: lines.length ? lines.join(' | ') : '—',
     list: lines.length ? lines.join('\n') : '—',
   };

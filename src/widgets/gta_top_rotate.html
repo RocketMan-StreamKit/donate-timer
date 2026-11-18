@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<script src="bridge.js"></script>
+<meta charset="utf-8">
+<title>GTA 6 — Топ-6 (по очереди)</title>
+<link rel="stylesheet" href="gta.css">
+<style>
+  /* Recommended source: 480×37. */
+  body { width: 480px; height: 37px; }
+  .stage { position: relative; width: 480px; height: 37px; }
+  .slide { position: absolute; inset: 0; opacity: 0; transition-property: opacity; transition-timing-function: linear; }
+  .slide.on { opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage" role="group" aria-label="Топ-6 донатеров марафона"></div>
+<script src="gta-top.js"></script>
+<script>
+(function () {
+  'use strict';
+  var LABEL = 'Топ-6 донатеров';
+  var stage = document.getElementById('stage');
+  var slides = [];
+  var index = 0;
+  var key = '';
+  var slideMs = 10000;
+  var fadeMs = 600;
+  var timer = 0;
+
+  /** Shows slide `i`, cross-fading from the current one. */
+  function show(i) {
+    slides.forEach(function (s, n) {
+      s.style.transitionDuration = fadeMs + 'ms';
+      s.classList.toggle('on', n === i);
+    });
+  }
+
+  /** Advances the rotation; the next tick is scheduled from the current settings. */
+  function tick() {
+    clearTimeout(timer);
+    if (slides.length > 1) {
+      index = (index + 1) % slides.length;
+      show(index);
+    }
+    timer = setTimeout(tick, slideMs);
+  }
+
+  function apply(snapshot) {
+    var meta = snapshot && snapshot.meta;
+    if (!meta) return;
+    GtaTop.applyBackground(meta, 'topRotate');
+    if (meta.gta) {
+      slideMs = Math.max(1000, Math.round(meta.gta.topSlideSeconds * 1000));
+      fadeMs = Math.max(0, Math.round(meta.gta.topFadeSeconds * 1000));
+    }
+    var top = (meta.top || []).slice(0, 6);
+    var next = top.map(function (r) { return r.name; }).join('\u0001');
+    if (next === key) return;
+    var current = slides[index] && slides[index].dataset.name;
+    key = next;
+    stage.innerHTML = '';
+    slides = top.map(function (r, n) {
+      var wrap = document.createElement('div');
+      wrap.className = 'slide';
+      wrap.dataset.name = r.name;
+      wrap.appendChild(GtaTop.row(n + 1, r.name, LABEL));
+      stage.appendChild(wrap);
+      return wrap;
+    });
+    // Keep showing the same donor when the order changes, otherwise restart from #1.
+    var keep = slides.findIndex(function (s) { return s.dataset.name === current; });
+    index = keep >= 0 ? keep : 0;
+    if (slides.length) {
+      slides[index].style.transitionDuration = '0ms';
+      void slides[index].offsetWidth;
+      slides[index].classList.add('on');
+    }
+    if (!timer) timer = setTimeout(tick, slideMs);
+  }
+
+  DonateTimerBridge.on(apply);
+})();
+</script>
+</body>
+</html>

@@ -90,6 +90,12 @@ export const WIDGETS = [
   'webcam_frame',
 ] as const;
 
+/**
+ * GTA 6 themed widget pages (shown in their own panel section).
+ * @example GTA_WIDGETS.includes('gta_timer'); // true
+ */
+export const GTA_WIDGETS = ['gta_timer', 'gta_top_rotate', 'gta_top_list'] as const;
+
 /** Widget page id. */
 export type WidgetId = (typeof WIDGETS)[number];
 
@@ -146,6 +152,15 @@ export const DEFAULT_SETTINGS: DonateTimerSettings = {
     bombSound: true,
     openSoundUrl: '',
     volume: 80,
+  },
+  gta: {
+    title: 'Марафон\nGTA 6',
+    criticalMinutes: 10,
+    topSlideSeconds: 10,
+    topFadeSeconds: 0.6,
+    timerBgOpacity: 65,
+    topRotateBgOpacity: 65,
+    topListBgOpacity: 65,
   },
 };
 

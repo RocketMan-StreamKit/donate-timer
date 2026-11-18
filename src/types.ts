@@ -115,6 +115,24 @@ export type BonusSettings = {
   volume: number;
 };
 
+/** GTA 6 themed widgets. */
+export type GtaSettings = {
+  /** Title on the left of the timer plate; `\n` splits lines. */
+  title: string;
+  /** Critical mode below this many minutes (0 = off). */
+  criticalMinutes: number;
+  /** Top-6 rotation: seconds each donor stays on screen. */
+  topSlideSeconds: number;
+  /** Top-6 rotation: cross-fade duration, seconds. */
+  topFadeSeconds: number;
+  /** Dark background fill of the timer plate, percent (0 = fully transparent). */
+  timerBgOpacity: number;
+  /** Dark background fill of the rotating Top-6 row, percent. */
+  topRotateBgOpacity: number;
+  /** Dark background fill of the Top-6 list rows, percent. */
+  topListBgOpacity: number;
+};
+
 /** Every user-editable setting of the addon. */
 export type DonateTimerSettings = {
   /** Base currency (`app` follows the StreamKit+ main currency). */
@@ -139,6 +157,8 @@ export type DonateTimerSettings = {
   timeGoal: TimeGoalSettings;
   /** Bonus rate window. */
   bonus: BonusSettings;
+  /** GTA 6 themed widgets. */
+  gta: GtaSettings;
 };
 
 /** Origin of a journal entry. */
@@ -204,6 +224,8 @@ export type TimerState = {
   status: TimerStatus;
   /** Blink end (ms epoch, 0 = not blinking). */
   blinkUntil: number;
+  /** Session time bank: starting time plus every second added since the last reset / manual set (progress bar = remaining / bank). */
+  bank: number;
 };
 
 /** Last alert shown by the timer widgets. */
@@ -214,6 +236,8 @@ export type AlertState = {
   nick: string;
   /** Grant text like `+1м 30с`. */
   text: string;
+  /** Granted seconds. */
+  seconds: number;
   /** Plate color. */
   color: AlertColor;
   /** Creation time (ms epoch). */

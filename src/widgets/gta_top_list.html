@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<script src="bridge.js"></script>
+<meta charset="utf-8">
+<title>GTA 6 — Топ-6 (списком)</title>
+<link rel="stylesheet" href="gta.css">
+<style>
+  /* Recommended source: 480×262 (six rows of 37 px with 8 px gaps). */
+  body { width: 480px; }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .list .gta-row { animation: gta-in 0.5s ease both; }
+  @keyframes gta-in { from { opacity: 0; transform: translateX(-12px); } }
+</style>
+</head>
+<body>
+  <div class="list" id="list" role="list" aria-label="Топ-6 донатеров марафона"></div>
+<script src="gta-top.js"></script>
+<script>
+(function () {
+  'use strict';
+  var LABEL = 'Топ-6 донатеров';
+  var list = document.getElementById('list');
+  var key = '';
+
+  function apply(snapshot) {
+    var meta = snapshot && snapshot.meta;
+    if (!meta) return;
+    GtaTop.applyBackground(meta, 'topList');
+    var top = (meta.top || []).slice(0, 6);
+    var next = top.map(function (r) { return r.name; }).join('\u0001');
+    if (next === key) return;
+    key = next;
+    list.replaceChildren.apply(list, top.map(function (r, n) {
+      var row = GtaTop.row(n + 1, r.name, LABEL);
+      row.setAttribute('role', 'listitem');
+      row.style.animationDelay = (n * 0.06) + 's';
+      return row;
+    }));
+  }
+
+  DonateTimerBridge.on(apply);
+})();
+</script>
+</body>
+</html>
