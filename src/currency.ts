@@ -2,6 +2,38 @@ import { db } from './store';
 
 /** Cached StreamKit+ main currency (refreshed periodically). */
 let appCurrency = 'RUB';
+/** Cached currency codes known to StreamKit+ (for manual donations). */
+let currencyCodes: string[] = [];
+
+/**
+ * StreamKit+ main currency (cached).
+ * @returns Currency code.
+ * @example getAppCurrency(); // 'UAH'
+ */
+export const getAppCurrency = () => appCurrency;
+
+/**
+ * Currency codes for the manual donation picker (real currencies only, app order).
+ * @returns Codes.
+ * @example getCurrencyCodes()[0]; // 'USD'
+ */
+export const getCurrencyCodes = () => currencyCodes;
+
+/**
+ * Loads the currency list once from StreamKit+.
+ * @returns Promise resolved when cached.
+ * @example await loadCurrencyCodes();
+ */
+export const loadCurrencyCodes = async () => {
+  try {
+    const res = await currency.getList();
+    if (res.success) {
+      currencyCodes = res.currencies.map(c => c.key).filter(code => code !== 'CHEER' && code !== 'CHEERS');
+    }
+  } catch (error) {
+    console.warn('[donate-timer] currency.getList failed', error);
+  }
+};
 
 /**
  * Refreshes the cached app currency from StreamKit+ settings.

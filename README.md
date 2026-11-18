@@ -19,7 +19,8 @@ dashboard feed, so any donation platform addon you have installed works.
 - "Time is up" blink (30 s by default). Donations that arrive during the blink are buffered and applied
   when it ends; the timer restarts if time was added.
 - Manual control: 12 quick buttons (±1 min to ±1 h), custom time, time for a nickname (journal row
-  without money), donation by amount for a nickname (counted like a real donation).
+  without money), and a manual donation with nickname, amount and currency (defaults to the StreamKit+
+  currency, converted like a real donation).
 - Donation journal: remove last (takes time back), clear history (donations already processed are not
   counted again), reset widget statistics without touching the journal.
 - Alert plate colors by amount (blue, purple, green, red).
@@ -60,7 +61,10 @@ Add `&sound=0` to a bonus widget URL to mute that copy. Widget texts are in Russ
 | `src/store.ts` | Persisted state in addon `storage` (settings, journal, timer, bonus) |
 | `src/widgets.ts` | Widget snapshot, Socket.IO namespace `live`, `GET snapshot` fallback |
 | `src/endpoints.ts` | Control panel API: `GET panel`, `POST action` (token required) |
-| `src/app.ts`, `src/panel/` | Control panel UI (in-app window) |
+| `src/app.ts` | Control panel entry: builds tabs from components, polls state every second |
+| `src/panel/` | Panel core: `api.ts` (HTTP), `store.ts` (state, tab switching), `dom.ts`, `format.ts`, `i18n.ts` |
+| `src/panel/ui/` | Reusable UI: card, buttons, segmented control, fields, settings card with save bar, confirm dialog, toasts |
+| `src/panel/sections/` | Header, tabs, getting-started guide and one module per tab (control, setup, marathon, bonus, widgets) |
 | `src/widgets/*.html` | Widget pages ported from the desktop app |
 | `src/widgets/bridge.js` | Serves the desktop "files" (`timer.txt`, `rate.txt`, `blink.flag`, …) to the widget code from the snapshot |
 

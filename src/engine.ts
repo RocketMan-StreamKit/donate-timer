@@ -490,17 +490,33 @@ export const addTimeWithName = (seconds: number, username: string): ActionResult
 };
 
 /**
- * Adds a donation by amount for a nickname (bonus aware, like a real donation).
- * @param amount Base-currency amount.
+ * Adds a donation by hand (bonus aware, like a real donation).
+ * Amounts in another currency are converted to the base currency first.
+ * @param amount Amount in `currencyCode`.
  * @param username Donor name.
- * @returns Action result.
- * @example addAmountWithName(500, 'Bob');
+ * @param currencyCode Currency of the amount (default: base currency).
+ * @returns Promise with the action result.
+ * @example await addAmountWithName(5, 'Bob', 'USD');
  */
-export const addAmountWithName = (amount: number, username: string): ActionResult => {
+export const addAmountWithName = async (
+  amount: number,
+  username: string,
+  currencyCode = baseCurrency()
+): Promise<ActionResult> => {
   if (!(amount > 0) || !username.trim()) return fail('amountAndName');
-  if (!isBlinking() && !(secondsFor(amount, rateInEffect()) > 0)) return fail('rateZero');
+  const code = (currencyCode || baseCurrency()).toUpperCase();
+  const converted = await toBase(amount, code);
+  if (converted === null) return fail('currencyConvert');
+  if (!isBlinking() && !(secondsFor(converted, rateInEffect()) > 0)) return fail('rateZero');
+  const sameCurrency = code === baseCurrency();
   applyEntry({
-    entry: newEntry({ id: `manual_amount_${Date.now()}`, username, amount, source: 'manual_amount' }),
+    entry: newEntry({
+      id: `manual_amount_${Date.now()}`,
+      username,
+      amount: converted,
+      source: 'manual_amount',
+      ...(sameCurrency ? {} : { originalAmount: amount, originalCurrency: code }),
+    }),
   });
   changed();
   return ok();

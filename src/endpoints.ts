@@ -2,7 +2,7 @@
  * HTTP API for the in-app control panel (`index.html`). Every call requires `?token=`.
  */
 import { isActive, nowSec } from './bonus';
-import { baseCurrency, refreshAppCurrency } from './currency';
+import { baseCurrency, getAppCurrency, getCurrencyCodes, refreshAppCurrency } from './currency';
 import {
   addAmountWithName,
   addTime,
@@ -25,7 +25,7 @@ import {
   type ActionResult,
 } from './engine';
 import { rateText } from './format';
-import { goalProgress, marathonStats, moneyRows } from './stats';
+import { goalProgress, marathonStats, moneyRows, onAirSeconds } from './stats';
 import { db } from './store';
 import { currentSnapshot, widgetUrls } from './widgets';
 
@@ -70,6 +70,8 @@ const panelState = () => {
     success: true,
     lang: LANG.current,
     currency: baseCurrency(),
+    appCurrency: getAppCurrency(),
+    currencies: getCurrencyCodes(),
     settings: db.settings,
     timer: {
       remaining: Math.floor(db.timer.remaining),
@@ -83,6 +85,7 @@ const panelState = () => {
     stats: marathonStats(),
     goal: { ...goalProgress(), target: db.settings.goal.target },
     timeGoal: currentSnapshot().files['marathon_time_goal.txt'] ?? '',
+    onAir: onAirSeconds(),
     summary: {
       count: db.donations.length,
       seconds: db.donations.reduce((acc, row) => acc + row.seconds, 0),
@@ -114,9 +117,9 @@ const s = (value: unknown) => (typeof value === 'string' ? value : '');
  * Runs one panel action.
  * @param body Request body `{ type, ... }`.
  * @returns Action result.
- * @example runAction({ type: 'addTime', seconds: 60 });
+ * @example await runAction({ type: 'addTime', seconds: 60 });
  */
-const runAction = (body: Record<string, unknown>): ActionResult => {
+const runAction = async (body: Record<string, unknown>): Promise<ActionResult> => {
   switch (body.type) {
     case 'start':
       return startTimer();
@@ -131,7 +134,7 @@ const runAction = (body: Record<string, unknown>): ActionResult => {
     case 'addTimeWithName':
       return addTimeWithName(n(body.seconds), s(body.username));
     case 'addAmountWithName':
-      return addAmountWithName(n(body.amount), s(body.username));
+      return addAmountWithName(n(body.amount), s(body.username), s(body.currency) || undefined);
     case 'removeLast':
       return removeLastDonation();
     case 'clearHistory':
@@ -176,9 +179,9 @@ export const registerPanelEndpoints = async () => {
     return panelState();
   });
 
-  events.On('onPanelAction', ({ query, body }) => {
+  events.On('onPanelAction', async ({ query, body }) => {
     if (query?.token !== data.token) return unauthorized();
-    const result = runAction((body && typeof body === 'object' ? body : {}) as Record<string, unknown>);
+    const result = await runAction((body && typeof body === 'object' ? body : {}) as Record<string, unknown>);
     return { ...result, state: panelState() };
   });
 };

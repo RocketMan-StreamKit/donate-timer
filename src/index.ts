@@ -4,7 +4,7 @@
  * @see https://rocketman-streamkit.github.io/types/
  */
 import { ADDON_ID } from './constants';
-import { refreshAppCurrency } from './currency';
+import { loadCurrencyCodes, refreshAppCurrency } from './currency';
 import { handleDonation, setChangeListener, tick } from './engine';
 import { registerPanelEndpoints } from './endpoints';
 import { flush } from './store';
@@ -38,6 +38,7 @@ const subscribeDonations = async () => {
  */
 const start = async () => {
   await refreshAppCurrency();
+  await loadCurrencyCodes();
   setChangeListener(scheduleBroadcast);
   await registerWidgetFeed();
   await registerPanelEndpoints();
