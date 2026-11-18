@@ -36,14 +36,19 @@
     });
   }
 
-  /** Advances the rotation; the next tick is scheduled from the current settings. */
-  function tick() {
+  /** (Re)starts the countdown to the next slide with the current display time. */
+  function schedule() {
     clearTimeout(timer);
+    timer = setTimeout(tick, slideMs);
+  }
+
+  /** Advances the rotation to the next donor. */
+  function tick() {
     if (slides.length > 1) {
       index = (index + 1) % slides.length;
       show(index);
     }
-    timer = setTimeout(tick, slideMs);
+    schedule();
   }
 
   function apply(snapshot) {
@@ -51,8 +56,13 @@
     if (!meta) return;
     GtaTop.applyBackground(meta, 'topRotate');
     if (meta.gta) {
-      slideMs = Math.max(1000, Math.round(meta.gta.topSlideSeconds * 1000));
-      fadeMs = Math.max(0, Math.round(meta.gta.topFadeSeconds * 1000));
+      var nextSlide = Math.max(1000, Math.round(Number(meta.gta.topSlideSeconds) * 1000) || 10000);
+      fadeMs = Math.max(0, Math.round(Number(meta.gta.topFadeSeconds) * 1000) || 0);
+      // A changed display time applies right away instead of after the old (possibly long) wait.
+      if (nextSlide !== slideMs) {
+        slideMs = nextSlide;
+        if (timer) schedule();
+      }
     }
     var top = (meta.top || []).slice(0, 6);
     var next = top.map(function (r) { return r.name; }).join('\u0001');
@@ -76,7 +86,7 @@
       void slides[index].offsetWidth;
       slides[index].classList.add('on');
     }
-    if (!timer) timer = setTimeout(tick, slideMs);
+    if (!timer) schedule();
   }
 
   DonateTimerBridge.on(apply);

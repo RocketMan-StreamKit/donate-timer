@@ -39,8 +39,12 @@ export type WidgetSnapshot = {
 export type GtaMeta = {
   /** Title lines on the left of the timer plate. */
   title: string[];
-  /** Critical mode threshold, seconds (0 = off). */
-  criticalSeconds: number;
+  /**
+   * Time-left stage thresholds, seconds (0 = stage off). The plate takes the most severe stage whose
+   * threshold is above the remaining time.
+   * @example { warn: 1800, danger: 900, critical: 300 }
+   */
+  stages: { warn: number; danger: number; critical: number };
   /** Top-6 rotation timings, seconds. */
   topSlideSeconds: number;
   /** Top-6 cross-fade duration, seconds. */
@@ -73,7 +77,11 @@ const gtaMeta = (): GtaMeta => {
   const percent = live ? db.bonus.lockedPercent ?? 0 : 0;
   return {
     title: g.title.split('\n'),
-    criticalSeconds: Math.round(g.criticalMinutes * 60),
+    stages: {
+      warn: Math.round(g.warnMinutes * 60),
+      danger: Math.round(g.dangerMinutes * 60),
+      critical: Math.round(g.criticalMinutes * 60),
+    },
     topSlideSeconds: g.topSlideSeconds,
     topFadeSeconds: g.topFadeSeconds,
     bgAlpha: {

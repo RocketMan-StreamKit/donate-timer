@@ -155,7 +155,9 @@ export const DEFAULT_SETTINGS: DonateTimerSettings = {
   },
   gta: {
     title: 'Марафон\nGTA 6',
-    criticalMinutes: 10,
+    warnMinutes: 30,
+    dangerMinutes: 15,
+    criticalMinutes: 5,
     topSlideSeconds: 10,
     topFadeSeconds: 0.6,
     timerBgOpacity: 65,

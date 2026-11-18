@@ -61,9 +61,10 @@ body {
   100% { transform: translateY(-48px) scale(0.4); opacity: 0; }
 }
 
-@keyframes critpulse {
-  0%, 100% { box-shadow: 0 0 6px rgba(255, 61, 90, 0.35); }
-  50% { box-shadow: 0 0 18px 3px rgba(255, 61, 90, 0.85); }
+/* Time-left stage glow; the color comes from `--stage` (an "r, g, b" triple) on the plate. */
+@keyframes stagepulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(var(--stage), 0.35); }
+  50% { box-shadow: 0 0 18px 3px rgba(var(--stage), 0.85); }
 }
 
 @keyframes timepulse {

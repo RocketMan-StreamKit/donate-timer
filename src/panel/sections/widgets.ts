@@ -101,7 +101,7 @@ const classicWidgets = (): Component => {
 };
 
 /**
- * GTA 6 themed widgets: links plus their settings (plate title, critical mode, Top-6 rotation).
+ * GTA 6 themed widgets: links plus their settings (plate title, time-left stages, Top-6 rotation, background).
  * @returns Component.
  * @example gtaWidgets().el;
  */
@@ -109,7 +109,10 @@ const gtaWidgets = (): Component => {
   const list = h('div', { class: 'dt-widget-grid dt-widget-grid--gta' });
   const paint = tileGrid(list);
   const title = textareaField({ label: t('gtaPlateTitle'), hint: t('gtaPlateTitleHint'), rows: 2, maxLength: 120, placeholder: 'Марафон\nGTA 6' });
-  const critical = numberField({ label: t('gtaCritical'), hint: t('gtaCriticalHint'), min: 0, max: 1440, step: 1, suffix: t('mm') });
+  const stageField = (label: string) => numberField({ label, min: 0, max: 1440, step: 1, suffix: t('mm') });
+  const warn = stageField(t('gtaStageWarn'));
+  const danger = stageField(t('gtaStageDanger'));
+  const critical = stageField(t('gtaStageCritical'));
   const slide = numberField({ label: t('gtaSlide'), min: 1, max: 600, step: 0.5, suffix: t('ss') });
   const fade = numberField({ label: t('gtaFade'), min: 0, max: 10, step: 0.1, suffix: t('ss') });
   const bgField = (label: string) => numberField({ label, min: 0, max: 100, step: 5, suffix: '%' });
@@ -124,6 +127,8 @@ const gtaWidgets = (): Component => {
     class: 'dt-gta',
     fields: {
       'gta.title': title,
+      'gta.warnMinutes': warn,
+      'gta.dangerMinutes': danger,
       'gta.criticalMinutes': critical,
       'gta.topSlideSeconds': slide,
       'gta.topFadeSeconds': fade,
@@ -134,9 +139,10 @@ const gtaWidgets = (): Component => {
     layout: [
       list,
       h('div', { class: 'dt-gta-settings' }, [
-        group(t('gtaGroupTimer'), [title.el, critical.el]),
+        group(t('gtaGroupTimer'), [title.el]),
         group(t('gtaGroupTop'), [grid(slide.el, fade.el)], t('gtaGroupTopHint')),
-        // Background opacity always takes its own full-width row below the two groups.
+        // Time-left stages and background opacity each take a full-width row below the two groups.
+        h('div', { class: 'dt-gta-wide' }, [group(t('gtaGroupStages'), [grid(warn.el, danger.el, critical.el)], t('gtaStagesHint'))]),
         h('div', { class: 'dt-gta-wide' }, [group(t('gtaGroupLook'), [grid(bgTimer.el, bgRotate.el, bgList.el)], t('gtaBgHint'))]),
       ]),
     ],

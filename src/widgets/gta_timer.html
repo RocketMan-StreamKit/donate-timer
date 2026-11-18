@@ -34,13 +34,18 @@
     box-shadow: 0 0 8px rgba(255, 176, 32, 0.3);
     animation: goldshine 2.4s ease-in-out infinite;
   }
+  /* Time-left stages: yellow (calm glow) → orange (slow pulse) → red critical (fast pulse). */
+  .plate.warn,
+  .plate.danger,
   .plate.crit {
-    --bar: #ff3d5a;
-    background: rgba(22, 10, 13, var(--bg-a));
-    border: 1.5px solid #ff3d5a;
-    box-shadow: 0 0 6px rgba(255, 61, 90, 0.35);
-    animation: critpulse 1s ease-in-out infinite;
+    --bar: rgb(var(--stage));
+    background: rgba(var(--stage-bg), var(--bg-a));
+    border: 1.5px solid rgb(var(--stage));
+    box-shadow: 0 0 6px rgba(var(--stage), 0.35);
   }
+  .plate.warn { --stage: 255, 210, 58; --stage-bg: 20, 17, 6; --stage-text: #ffe27a; animation: stagepulse 2.4s ease-in-out infinite; }
+  .plate.danger { --stage: 255, 138, 31; --stage-bg: 22, 13, 6; --stage-text: #ffaa5c; animation: stagepulse 1.6s ease-in-out infinite; }
+  .plate.crit { --stage: 255, 61, 90; --stage-bg: 22, 10, 13; --stage-text: #ff6a8a; animation: stagepulse 1s ease-in-out infinite; }
   .plate.boom { animation: glowpulse 1.4s ease-in-out 3 !important; }
 
   .fx { position: absolute; inset: 0; overflow: hidden; border-radius: 4px; pointer-events: none; }
@@ -80,7 +85,10 @@
     letter-spacing: -0.5px;
     color: #fff;
   }
-  .plate.crit .time { color: #ff6a8a; animation: timepulse 1s ease-in-out infinite; }
+  .plate.warn .time,
+  .plate.danger .time { color: var(--stage-text); }
+  .plate.danger .time { animation: timepulse 1.6s ease-in-out infinite; }
+  .plate.crit .time { color: var(--stage-text); animation: timepulse 1s ease-in-out infinite; }
   .plate.boom .time,
   .plate.boom .title,
   .plate.boom .rate { animation: timedim 4.2s ease-in-out forwards; }
@@ -317,6 +325,21 @@
     }, TOAST_MS + 150);
   }
 
+  /**
+   * Picks the most severe time-left stage whose threshold is above the remaining time.
+   * @param {number} remaining Seconds left.
+   * @param {{warn:number, danger:number, critical:number}} stages Thresholds in seconds (0 = off).
+   * @returns {string} 'crit', 'danger', 'warn' or ''.
+   * @example stageFor(600, { warn: 1800, danger: 900, critical: 300 }); // 'danger'
+   */
+  function stageFor(remaining, stages) {
+    if (!stages) return '';
+    if (stages.critical > 0 && remaining < stages.critical) return 'crit';
+    if (stages.danger > 0 && remaining < stages.danger) return 'danger';
+    if (stages.warn > 0 && remaining < stages.warn) return 'warn';
+    return '';
+  }
+
   function apply(snapshot) {
     meta = snapshot && snapshot.meta;
     if (!meta || !meta.timer || !meta.gta) return;
@@ -325,10 +348,12 @@
     if (g.bgAlpha && typeof g.bgAlpha.timer === 'number') document.documentElement.style.setProperty('--bg-a', String(g.bgAlpha.timer));
     var remaining = t.blinking ? 0 : t.remaining;
     var final = remaining <= 0;
-    var crit = !final && g.criticalSeconds > 0 && remaining < g.criticalSeconds;
+    var stage = final ? '' : stageFor(remaining, g.stages);
 
     plate.classList.toggle('gold', g.bonus && !final);
-    plate.classList.toggle('crit', crit);
+    plate.classList.toggle('warn', stage === 'warn');
+    plate.classList.toggle('danger', stage === 'danger');
+    plate.classList.toggle('crit', stage === 'crit');
     plate.classList.toggle('final', final);
     renderTitle(g.title && g.title.length ? g.title : ['Марафон']);
     renderRate(g, final);

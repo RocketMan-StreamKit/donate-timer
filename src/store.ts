@@ -160,6 +160,8 @@ export const sanitizeSettings = (
     },
     gta: {
       title: gtaTitle,
+      warnMinutes: clamp(gta.warnMinutes, base.gta.warnMinutes, 0, 1440),
+      dangerMinutes: clamp(gta.dangerMinutes, base.gta.dangerMinutes, 0, 1440),
       criticalMinutes: clamp(gta.criticalMinutes, base.gta.criticalMinutes, 0, 1440),
       topSlideSeconds: clamp(gta.topSlideSeconds, base.gta.topSlideSeconds, 1, 600),
       topFadeSeconds: clamp(gta.topFadeSeconds, base.gta.topFadeSeconds, 0, 10),

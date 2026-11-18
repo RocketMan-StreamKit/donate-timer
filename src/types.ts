@@ -119,7 +119,11 @@ export type BonusSettings = {
 export type GtaSettings = {
   /** Title on the left of the timer plate; `\n` splits lines. */
   title: string;
-  /** Critical mode below this many minutes (0 = off). */
+  /** Yellow warning stage below this many minutes left (0 = off). */
+  warnMinutes: number;
+  /** Orange danger stage below this many minutes left (0 = off). */
+  dangerMinutes: number;
+  /** Red critical stage below this many minutes left (0 = off). */
   criticalMinutes: number;
   /** Top-6 rotation: seconds each donor stays on screen. */
   topSlideSeconds: number;

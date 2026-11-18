@@ -54,12 +54,12 @@ Add `&sound=0` to a bonus widget URL to mute that copy.
 
 | Widget | File | OBS source |
 | --- | --- | --- |
-| Timer plate (golden hour during the bonus rate, critical mode, donation toasts) | `widgets/gta_timer.html` | 520 × 120 |
+| Timer plate (golden hour during the bonus rate, time-left stages, donation toasts) | `widgets/gta_timer.html` | 520 × 120 |
 | Top-6, one donor at a time in a loop | `widgets/gta_top_rotate.html` | 480 × 37 |
 | Top-6, all six at once | `widgets/gta_top_list.html` | 480 × 262 |
 
-Settings (tab **OBS widgets → GTA 6 theme**): plate title (up to 3 lines), critical-mode threshold in
-minutes (0 = off), Top-6 display time and cross-fade duration. Fonts Archivo and Space Grotesk are
+Settings (tab **OBS widgets → GTA 6 theme**): plate title (up to 3 lines), three time-left stages in
+minutes — yellow, orange, red critical (0 = stage off; defaults 30 / 15 / 5), Top-6 display time and cross-fade duration. Fonts Archivo and Space Grotesk are
 bundled in `widgets/fonts/` under the SIL Open Font License (`widgets/fonts/OFL.txt`). Widget texts are in Russian, as in the desktop app.
 
 ## Architecture

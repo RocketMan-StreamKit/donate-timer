@@ -11,7 +11,7 @@
     "uk": "Таймер марафону, який подовжують донати: бонусний курс, донат-гол, топ донатерів, ціль за часом і віджети для OBS."
   },
   "type": "application",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "RocketMan System",
   "icon": "logo.svg",
   "permissions": [
